@@ -395,7 +395,7 @@ document.getElementById('tag-select').addEventListener('change', function(e) {
 
 setInterval(function() {
   var d = new Date();
-  document.getElementById('live-clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  document.getElementById('live-clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   
   if (state.dateKey !== todayKey()) {
     state = loadToday();

@@ -1,4 +1,4 @@
-var STORE = 'gt_tracker_v1', HIST = 'gt_cal_v1';
+var STORE = 'gt_tracker_v2', HIST = 'gt_cal_v2';
 
 function loadToday() {
   try {
@@ -26,7 +26,8 @@ function mkFresh() {
     inTime: null, 
     lunchStart: null, 
     lunchEnd: null, 
-    outTime: null 
+    outTime: null,
+    tag: 'General'
   }; 
 }
 
@@ -109,6 +110,7 @@ function renderTracker() {
   document.getElementById('m-in').textContent = s.inTime ? fmt(s.inTime) : '—';
   document.getElementById('m-lunch').textContent = s.lunchStart ? (fmt(s.lunchStart) + (s.lunchEnd ? ' – ' + fmt(s.lunchEnd) : ' →')) : '—';
   document.getElementById('m-worked').textContent = dur(workedMs(s)) || '0h 0m';
+  if(s.tag) document.getElementById('tag-select').value = s.tag;
 
   var entries = s.entries || [];
   document.getElementById('log-badge').textContent = entries.length + (entries.length === 1 ? ' entry' : ' entries');
@@ -123,7 +125,8 @@ function renderTracker() {
       var elapsed = prev ? ' <span class="log-dur">+' + dur(e.ts - prev.ts) + '</span>' : '';
       var noteHtml = e.note ? ' <span class="log-note">· ' + e.note + '</span>' : '';
       var ic = iconMap[e.label] || 'ti-point';
-      return '<div class="log-entry"><i class="ti ' + ic + ' log-icon" aria-hidden="true"></i><span class="log-label">' + e.label + noteHtml + '</span><span class="log-time">' + fmt(e.ts) + elapsed + '</span></div>';
+      var badge = e.label === 'Clock in' || e.label === 'Manual entry' ? '<span class="tag-badge-inline">' + (s.tag || 'General') + '</span>' : '';
+      return '<div class="log-entry"><i class="ti ' + ic + ' log-icon" aria-hidden="true"></i><span class="log-label">' + badge + e.label + noteHtml + '</span><span class="log-time">' + fmt(e.ts) + elapsed + '</span></div>';
     }).join('');
   }
 
@@ -137,6 +140,9 @@ function renderTracker() {
 function renderCal() {
   var h = loadHist();
   if (state.outTime) h[state.dateKey] = state;
+
+  calculateWeeklyMetrics(h);
+  calculateTagBreakdown(h);
 
   var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('cal-title').textContent = MONTHS[calMonth] + ' ' + calYear;
@@ -174,7 +180,7 @@ function renderCal() {
     if (hasData) {
       html += '<div class="cal-hours">' + dur(wms) + '</div>';
       html += '<div class="cal-bar" style="width:' + barW + '%"></div>';
-      html += '<div class="cal-in-out">' + fmt(rec.inTime) + ' – ' + fmt(rec.outTime) + '</div>';
+      html += '<div class="cal-in-out">' + (rec.tag || 'Lab') + '</div>';
     }
     html += '</button>';
   }
@@ -184,6 +190,70 @@ function renderCal() {
   document.getElementById('cal-grid').innerHTML = html;
 
   if (selectedDay && h[selectedDay]) renderDetail(h[selectedDay]);
+}
+
+/* NEW WEEKLY PROGRESS ENGINE */
+function calculateWeeklyMetrics(history) {
+  var now = new Date();
+  var currentDayOfWeek = now.getDay(); 
+  var startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - currentDayOfWeek); // Rollback to Sunday
+  
+  var weeklyMs = 0;
+  for (var i = 0; i < 7; i++) {
+    var checkDate = new Date(startOfWeek);
+    checkDate.setDate(startOfWeek.getDate() + i);
+    var key = checkDate.getFullYear() + '-' + pad(checkDate.getMonth()+1) + '-' + pad(checkDate.getDate());
+    
+    if (history[key]) {
+      weeklyMs += workedMs(history[key]);
+    }
+  }
+
+  var weeklyHours = weeklyMs / (3600000);
+  var targetHours = 40.0;
+  var pct = Math.min(100, Math.round((weeklyHours / targetHours) * 100));
+  
+  document.getElementById('weekly-hours-text').textContent = weeklyHours.toFixed(1) + ' / ' + targetHours.toFixed(1) + ' hrs';
+  document.getElementById('weekly-progress-bar').style.width = pct + '%';
+}
+
+/* NEW TAG ANALYTICS VISUALIZER ENGINE */
+function calculateTagBreakdown(history) {
+  var totals = {};
+  var grandTotalMs = 0;
+
+  Object.keys(history).forEach(function(key) {
+    var rec = history[key];
+    if (rec && rec.inTime) {
+      var t = rec.tag || 'General';
+      var ms = workedMs(rec);
+      totals[t] = (totals[t] || 0) + ms;
+      grandTotalMs += ms;
+    }
+  });
+
+  var container = document.getElementById('tag-breakdown-body');
+  if (grandTotalMs === 0) {
+    container.innerHTML = '<div class="detail-empty">No logged hours to display breakdowns.</div>';
+    return;
+  }
+
+  var html = Object.keys(totals).map(function(tag) {
+    var ms = totals[tag];
+    var pct = Math.round((ms / grandTotalMs) * 100);
+    return '<div class="tag-stat-item">' +
+             '<div class="tag-stat-meta">' +
+               '<span class="tag-stat-name">' + tag + ' <span style="color:var(--t3)">(' + pct + '%)</span></span>' +
+               '<span class="tag-stat-duration">' + dur(ms) + '</span>' +
+             '</div>' +
+             '<div class="tag-stat-bar-bg">' +
+               '<div class="tag-stat-bar-fill" style="width:' + pct + '%"></div>' +
+             '</div>' +
+           '</div>';
+  }).join('');
+  
+  container.innerHTML = html;
 }
 
 function selectDay(k) {
@@ -207,7 +277,8 @@ function renderDetail(rec) {
       var elapsed = prev ? ' <span class="log-dur">+' + dur(e.ts - prev.ts) + '</span>' : '';
       var noteHtml = e.note ? ' <span class="log-note">· ' + e.note + '</span>' : '';
       var ic = iconMap[e.label] || 'ti-point';
-      return '<div class="log-entry"><i class="ti ' + ic + ' log-icon" aria-hidden="true"></i><span class="log-label">' + e.label + noteHtml + '</span><span class="log-time">' + fmt(e.ts) + elapsed + '</span></div>';
+      var badge = e.label === 'Clock in' || e.label === 'Manual entry' ? '<span class="tag-badge-inline">' + (rec.tag || 'General') + '</span>' : '';
+      return '<div class="log-entry"><i class="ti ' + ic + ' log-icon" aria-hidden="true"></i><span class="log-label">' + badge + e.label + noteHtml + '</span><span class="log-time">' + fmt(e.ts) + elapsed + '</span></div>';
     }).join('');
   }
 }
@@ -215,10 +286,11 @@ function renderDetail(rec) {
 function calPrev() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } selectedDay = null; renderCal(); }
 function calNext() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } selectedDay = null; renderCal(); }
 function getNote() { return document.getElementById('note-input').value.trim(); }
+function getActiveTag() { return document.getElementById('tag-select').value; }
 
 function clockIn() {
   var now = Date.now();
-  state = { dateKey: todayKey(), entries: [{ label: 'Clock in', ts: now, note: getNote() }], status: 'in', inTime: now, lunchStart: null, lunchEnd: null, outTime: null };
+  state = { dateKey: todayKey(), entries: [{ label: 'Clock in', ts: now, note: getNote() }], status: 'in', inTime: now, lunchStart: null, lunchEnd: null, outTime: null, tag: getActiveTag() };
   document.getElementById('note-input').value = '';
   saveToday(state); renderTracker();
 }
@@ -251,6 +323,7 @@ function openManualModal() {
   document.getElementById('m-clock-out').value = "17:00";
   document.getElementById('m-lunch-dur').value = "0";
   document.getElementById('m-note').value = "";
+  document.getElementById('m-tag').value = "General";
   document.getElementById('manual-modal').classList.add('active');
 }
 function closeManualModal() {
@@ -260,6 +333,7 @@ function submitManualEntry() {
   var dateVal = document.getElementById('m-date').value;
   var inVal = document.getElementById('m-clock-in').value;
   var outVal = document.getElementById('m-clock-out').value;
+  var tagVal = document.getElementById('m-tag').value;
   var lunchMin = parseInt(document.getElementById('m-lunch-dur').value) || 0;
   var noteVal = document.getElementById('m-note').value.trim();
 
@@ -290,6 +364,7 @@ function submitManualEntry() {
     lunchStart: lunchMs > 0 ? inTs + 1000 : null,
     lunchEnd: lunchMs > 0 ? inTs + 1000 + lunchMs : null,
     outTime: outTs,
+    tag: tagVal,
     entries: [
       { label: 'Manual entry', ts: inTs, note: noteVal || 'Logged retroactively' }
     ]
@@ -309,6 +384,14 @@ function submitManualEntry() {
   selectedDay = targetKey;
   renderCal();
 }
+
+// Watch tag changes on main page input before clocking in
+document.getElementById('tag-select').addEventListener('change', function(e) {
+  if (state.status === 'out') {
+    state.tag = e.target.value;
+    saveToday(state);
+  }
+});
 
 setInterval(function() {
   var d = new Date();

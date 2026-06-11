@@ -13,7 +13,7 @@
 
   <div class="tab-row">
     <button class="tab active" onclick="switchTab('tracker')"><i class="ti ti-clock" style="font-size:14px;margin-right:5px;" aria-hidden="true"></i>Today</button>
-    <button class="tab" onclick="switchTab('calendar')"><i class="ti ti-calendar" style="font-size:14px;margin-right:5px;" aria-hidden="true"></i>Calendar</button>
+    <button class="tab" onclick="switchTab('calendar')"><i class="ti ti-chart-pie" style="font-size:14px;margin-right:5px;" aria-hidden="true"></i>Calendar & Analytics</button>
   </div>
 
   <div id="view-tracker" class="view active">
@@ -43,8 +43,15 @@
       </div>
     </div>
 
-    <div class="note-row">
-      <input type="text" id="note-input" placeholder="Optional note (e.g. lab meeting, cryo session...)" maxlength="80" />
+    <div class="input-group-row">
+      <select id="tag-select" class="tag-dropdown">
+        <option value="General">🏷️ General Lab</option>
+        <option value="Benchwork">🔬 Benchwork</option>
+        <option value="Data Analysis">💻 Data Analysis</option>
+        <option value="Writing">📝 Writing/Paper</option>
+        <option value="Lab Meeting">👥 Meeting/Seminar</option>
+      </select>
+      <input type="text" id="note-input" placeholder="Optional details (e.g., cell passage, qPCR setup...)" maxlength="80" />
     </div>
 
     <div class="actions">
@@ -64,11 +71,22 @@
   </div>
 
   <div id="view-calendar" class="view">
+    <div class="analytics-card">
+      <div class="analytics-card-header">
+        <span><i class="ti ti-calendar-stats" aria-hidden="true"></i> This Week's Progress</span>
+        <span id="weekly-hours-text" class="weekly-target-text">0.0 / 40.0 hrs</span>
+      </div>
+      <div class="progress-bar-container">
+        <div id="weekly-progress-bar" class="progress-bar-fill" style="width: 0%"></div>
+      </div>
+    </div>
+
     <div class="month-metrics">
       <div class="metric"><div class="metric-label">Days worked</div><div class="metric-val" id="cal-days">0</div></div>
       <div class="metric"><div class="metric-label">Total hours</div><div class="metric-val" id="cal-total">0h 0m</div></div>
       <div class="metric"><div class="metric-label">Avg per day</div><div class="metric-val" id="cal-avg">—</div></div>
     </div>
+
     <div class="cal-nav">
       <div class="cal-nav-arrows">
         <button onclick="calPrev()"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
@@ -82,9 +100,18 @@
       <div class="cal-dow-cell">Wed</div><div class="cal-dow-cell">Thu</div><div class="cal-dow-cell">Fri</div><div class="cal-dow-cell">Sat</div>
     </div>
     <div class="cal-grid" id="cal-grid"></div>
-    <div class="detail-panel">
-      <div class="detail-header" id="detail-header">Select a day to see its log</div>
-      <div id="detail-body"><div class="detail-empty">Click any day with recorded hours to view its full log.</div></div>
+
+    <div class="dashboard-split">
+      <div class="detail-panel">
+        <div class="detail-header"><i class="ti ti-chart-pie-2" aria-hidden="true"></i> Project Tag Breakdown</div>
+        <div id="tag-breakdown-body" class="tag-breakdown-container">
+          </div>
+      </div>
+
+      <div class="detail-panel">
+        <div class="detail-header" id="detail-header">Select a day to see its log</div>
+        <div id="detail-body"><div class="detail-empty">Click any day with recorded hours to view its full log.</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -93,12 +120,24 @@
   <div class="modal">
     <div class="modal-header">
       <span>Add Manual Log</span>
-      <i class="ti ti-x" style="cursor:pointer;color:var(--t3)" onclick="closeManualModal()" aria-label="Close configuration"></i>
+      <i class="ti ti-x" style="cursor:pointer;color:var(--t3)" onclick="closeManualModal()" aria-label="Close layout"></i>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label for="m-date">Date</label>
-        <input type="date" id="m-date" required />
+      <div class="form-row">
+        <div class="form-group">
+          <label for="m-date">Date</label>
+          <input type="date" id="m-date" required />
+        </div>
+        <div class="form-group">
+          <label for="m-tag">Project Tag</label>
+          <select id="m-tag" class="tag-dropdown" style="width:100%; padding:9px;">
+            <option value="General">General Lab</option>
+            <option value="Benchwork">Benchwork</option>
+            <option value="Data Analysis">Data Analysis</option>
+            <option value="Writing">Writing/Paper</option>
+            <option value="Lab Meeting">Meeting/Seminar</option>
+          </select>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -116,7 +155,7 @@
       </div>
       <div class="form-group">
         <label for="m-note">Note</label>
-        <input type="text" id="m-note" placeholder="e.g. Manual correction, missed tap" maxlength="80" />
+        <input type="text" id="m-note" placeholder="e.g., Retroactive correction" maxlength="80" />
       </div>
     </div>
     <div class="modal-footer">

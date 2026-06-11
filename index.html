@@ -34,22 +34,28 @@
       </div>
     </div>
 
-    <div class="input-stack">
-      <select id="tag-select" class="tag-dropdown">
-        <option value="General">🏷️ General Lab</option>
-        <option value="Benchwork">🔬 Benchwork</option>
-        <option value="Data Analysis">💻 Data Analysis</option>
-        <option value="Writing">📝 Writing/Paper</option>
-        <option value="Lab Meeting">👥 Meeting/Seminar</option>
-      </select>
-      <input type="text" id="note-input" placeholder="Optional details..." maxlength="80" />
-    </div>
+  <div class="input-stack">
+    <select id="tag-select" class="tag-dropdown">
+      <option value="General">🏷️ General Lab</option>
+      <option value="Benchwork">🔬 Benchwork</option>
+      <option value="Data Analysis">💻 Data Analysis</option>
+      <option value="Writing">📝 Writing/Paper</option>
+      <option value="Lab Meeting">👥 Meeting/Seminar</option>
+    </select>
+    <input type="text" id="note-input" placeholder="Optional details..." maxlength="80" />
+  
+    <select id="tracker-lunch-dur" class="tag-dropdown" style="display: none; border-color: var(--amber);">
+      <option value="30">☕ Deduct 30 Min Lunch</option>
+      <option value="45">🥪 Deduct 45 Min Lunch</option>
+      <option value="60">🍱 Deduct 60 Min Lunch</option>
+    </select>
+</div>
 
-    <div class="actions-stack">
-      <button class="btn btn-primary" id="btn-in" onclick="clockIn()"><i class="ti ti-login" aria-hidden="true"></i> Clock In</button>
-      <button class="btn" id="btn-lunch" onclick="toggleLunch()" disabled><i class="ti ti-soup" aria-hidden="true"></i> <span id="lunch-label">Lunch</span></button>
-      <button class="btn" id="btn-out" onclick="clockOut()" disabled><i class="ti ti-logout" aria-hidden="true"></i> Clock Out</button>
-    </div>
+<div class="actions-stack">
+  <button class="btn btn-primary" id="btn-in" onclick="clockIn()"><i class="ti ti-login" aria-hidden="true"></i> Clock In</button>
+  <button class="btn" id="btn-lunch" onclick="toggleLunch()" disabled><i class="ti ti-soup" aria-hidden="true"></i> <span id="lunch-label">Lunch</span></button>
+  <button class="btn" id="btn-out" onclick="clockOut()" disabled><i class="ti ti-logout" aria-hidden="true"></i> Clock Out</button>
+</div>
 
     <div class="today-log-card">
       <div class="card-header">Today's Log <span id="log-badge" class="badge">0</span></div>
@@ -149,8 +155,13 @@
       </div>
 
       <div class="form-group" id="box-lunch-dur">
-        <label for="m-lunch-dur">Lunch Break Duration (Minutes)</label>
-        <input type="number" id="m-lunch-dur" min="0" value="0" />
+        <label for="m-lunch-dur">Lunch Break Interval</label>
+        <select id="m-lunch-dur" class="tag-dropdown" style="width:100%;">
+          <option value="0">None / 0 Minutes</option>
+          <option value="30">30 Minutes</option>
+          <option value="45">45 Minutes</option>
+          <option value="60">60 Minutes</option>
+        </select>
       </div>
 
       <div class="form-group">

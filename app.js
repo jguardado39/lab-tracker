@@ -80,22 +80,24 @@ function renderTracker() {
   var btnLunch = document.getElementById('btn-lunch');
   var btnOut = document.getElementById('btn-out');
   var llbl = document.getElementById('lunch-label');
+  var tLunchSelect = document.getElementById('tracker-lunch-dur');
 
   if (s.status === 'out' && !s.inTime) {
     dot.className = 'status-dot dot-out'; lbl.textContent = 'Clocked Out';
     btnIn.disabled = false; btnLunch.disabled = true; btnOut.disabled = true;
-    llbl.textContent = 'Lunch';
+    llbl.textContent = 'Lunch'; tLunchSelect.style.display = "none";
   } else if (s.status === 'in') {
     dot.className = 'status-dot dot-in'; lbl.textContent = 'Working';
     btnIn.disabled = true; btnLunch.disabled = false; btnOut.disabled = false;
-    llbl.textContent = 'Start Lunch';
+    llbl.textContent = 'Start Lunch'; tLunchSelect.style.display = "none";
   } else if (s.status === 'lunch') {
     dot.className = 'status-dot dot-lunch'; lbl.textContent = 'Lunch Break';
     btnIn.disabled = true; btnLunch.disabled = false; btnOut.disabled = true;
-    llbl.textContent = 'End Lunch';
+    llbl.textContent = 'End Lunch'; tLunchSelect.style.display = "block"; // Show dropdown selection choices
   } else if (s.status === 'done') {
     dot.className = 'status-dot dot-out'; lbl.textContent = 'Shift Ended';
     btnIn.disabled = true; btnLunch.disabled = true; btnOut.disabled = true;
+    tLunchSelect.style.display = "none";
   }
 
   document.getElementById('m-in').textContent = s.inTime ? fmt(s.inTime) : '—';
@@ -110,7 +112,7 @@ function renderTracker() {
   if (entries.length === 0) {
     logBody.innerHTML = '<div class="empty-text">No data logs yet.</div>';
   } else {
-    logBody.innerHTML = entries.map(function(e, i) {
+    logBody.innerHTML = entries.map(function(e) {
       var noteHtml = e.note ? '<div class="log-note">' + e.note + '</div>' : '';
       var badge = e.label === 'Clock in' || e.label === 'Manual entry' ? '<span class="tag-badge-inline">' + (s.tag || 'Lab') + '</span>' : '';
       return '<div class="log-entry"><div>' + badge + '<span style="font-weight:500;">' + e.label + '</span>' + noteHtml + '</div><span class="log-time">' + fmt(e.ts) + '</span></div>';
@@ -118,6 +120,24 @@ function renderTracker() {
   }
 
   document.getElementById('today-date').textContent = new Date().toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
+}
+
+function toggleLunch() {
+  var now = Date.now();
+  if (state.status === 'in') {
+    state.lunchStart = now; state.status = 'lunch';
+    state.entries.push({ label: 'Lunch start', ts: now, note: getNote() });
+  } else if (state.status === 'lunch') {
+    // Read the dropdown interval context values 
+    var chosenMin = parseInt(document.getElementById('tracker-lunch-dur').value) || 30;
+    var computedEnd = state.lunchStart + (chosenMin * 60 * 1000);
+    
+    state.lunchEnd = computedEnd;
+    state.status = 'in';
+    state.entries.push({ label: 'Lunch end', ts: computedEnd, note: getNote() + ' (' + chosenMin + 'm break)' });
+  }
+  document.getElementById('note-input').value = '';
+  saveToday(state); renderTracker(); renderCal();
 }
 
 function renderCal() {
@@ -382,7 +402,7 @@ function openManualModal() {
   document.getElementById('m-date').value = todayStr;
   document.getElementById('m-clock-in').value = "09:00";
   document.getElementById('m-clock-out').value = "17:00";
-  document.getElementById('m-lunch-dur').value = "0";
+  document.getElementById('m-lunch-dur').value = "0"; // Matches our "None / 0 Minutes" baseline choice
   document.getElementById('m-note').value = "";
   document.getElementById('m-tag').value = "General";
   

@@ -245,11 +245,28 @@ function renderDetail(rec) {
   var d = new Date(selectedDay + 'T12:00:00');
   var label = d.toLocaleDateString([], {month:'short', day:'numeric'});
   
-  // Dynamic header template with an in-line trash icon button
-  document.getElementById('detail-header').innerHTML = 
-    '<span>' + label + ' Log · ' + dur(workedMs(rec)) + '</span>' +
-    '<button class="btn btn-sm" style="color:var(--amber); border-color:rgba(239,159,39,0.2); background:transparent; padding:2px 6px; margin-left:auto;" onclick="deleteSelectedDay()">' +
-    '<i class="ti ti-trash" aria-hidden="true"></i> Delete</button>';
+  // Clear the header container first
+  var headerEl = document.getElementById('detail-header');
+  headerEl.innerHTML = '';
+  
+  // Create a clean text label span
+  var titleSpan = document.createElement('span');
+  titleSpan.textContent = label + ' Log · ' + dur(workedMs(rec));
+  headerEl.appendChild(titleSpan);
+  
+  // Programmatically build the delete button to prevent HTML string syntax errors
+  var delBtn = document.createElement('button');
+  delBtn.className = 'btn btn-sm';
+  delBtn.style.cssText = 'color:var(--amber); border-color:rgba(239,159,39,0.2); background:transparent; padding:2px 8px; margin-left:auto; display:inline-flex; align-items:center; gap:4px; font-size:11px; font-family:var(--font);';
+  delBtn.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i> Delete';
+  
+  // Bind click event cleanly
+  delBtn.onclick = function(e) {
+    if (e) e.stopPropagation(); // Stops the grid click listener from conflicting
+    deleteSelectedDay();
+  };
+  
+  headerEl.appendChild(delBtn);
     
   var entries = rec.entries || [];
   if (entries.length === 0) {
@@ -260,6 +277,41 @@ function renderDetail(rec) {
       var badge = e.label === 'Clock in' || e.label === 'Manual entry' ? '<span class="tag-badge-inline">' + (rec.tag || 'Lab') + '</span>' : '';
       return '<div class="log-entry"><div>' + badge + '<span style="font-weight:500;">' + e.label + '</span>' + noteHtml + '</div><span class="log-time">' + fmt(e.ts) + '</span></div>';
     }).join('');
+  }
+}
+
+function deleteSelectedDay() {
+  if (!selectedDay) {
+    alert("No day selected to delete.");
+    return;
+  }
+  
+  var d = new Date(selectedDay + 'T12:00:00');
+  var label = d.toLocaleDateString([], {month:'short', day:'numeric'});
+  
+  if (confirm("Are you sure you want to delete all logged data for " + label + "?")) {
+    var h = loadHist();
+    
+    // Explicitly delete key from map
+    if (h.hasOwnProperty(selectedDay)) {
+      delete h[selectedDay];
+      saveHist(h);
+    }
+    
+    // If it's today, reset the live clock session state variables completely
+    if (selectedDay === todayKey()) {
+      state = mkFresh();
+      saveToday(state);
+    }
+    
+    // Re-initialize values to base configurations 
+    selectedDay = null;
+    document.getElementById('detail-header').textContent = 'History Details';
+    document.getElementById('detail-body').innerHTML = '<div class="empty-text">Select a day.</div>';
+    
+    // Refresh the UI blocks completely
+    renderTracker();
+    renderCal();
   }
 }
 

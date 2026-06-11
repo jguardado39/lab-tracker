@@ -110,13 +110,23 @@
       <i class="ti ti-x" style="cursor:pointer;color:var(--t3)" onclick="closeManualModal()" aria-label="Close configuration"></i>
     </div>
     <div class="modal-body">
+      <div class="form-group">
+        <label for="m-type">Punch Configuration</label>
+        <select id="m-type" class="tag-dropdown" style="width:100%;" onchange="toggleModalFields()">
+          <option value="full">📅 Full Custom Shift</option>
+          <option value="in">🔒 Single Clock In</option>
+          <option value="out">🔓 Single Clock Out</option>
+          <option value="lunch">☕ Isolated Break/Lunch</option>
+        </select>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label for="m-date">Date</label>
           <input type="date" id="m-date" required />
         </div>
         <div class="form-group">
-          <label for="m-tag">Tag</label>
+          <label for="m-tag">Project Tag</label>
           <select id="m-tag" class="tag-dropdown" style="width:100%;">
             <option value="General">General Lab</option>
             <option value="Benchwork">Benchwork</option>
@@ -126,28 +136,31 @@
           </select>
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="m-clock-in">Clock In</label>
-          <input type="time" id="m-clock-in" required />
+
+      <div class="form-row" id="row-times">
+        <div class="form-group" id="box-in">
+          <label for="m-clock-in" id="lbl-clock-in">Clock In Time</label>
+          <input type="time" id="m-clock-in" />
         </div>
-        <div class="form-group">
-          <label for="m-clock-out">Clock Out</label>
-          <input type="time" id="m-clock-out" required />
+        <div class="form-group" id="box-out">
+          <label for="m-clock-out">Clock Out Time</label>
+          <input type="time" id="m-clock-out" />
         </div>
       </div>
-      <div class="form-group">
-        <label for="m-lunch-dur">Lunch Break (Minutes)</label>
+
+      <div class="form-group" id="box-lunch-dur">
+        <label for="m-lunch-dur">Lunch Break Duration (Minutes)</label>
         <input type="number" id="m-lunch-dur" min="0" value="0" />
       </div>
+
       <div class="form-group">
-        <label for="m-note">Note</label>
-        <input type="text" id="m-note" placeholder="e.g. Manual edit" maxlength="80" />
+        <label for="m-note">Log Note / Description</label>
+        <input type="text" id="m-note" placeholder="e.g., Forgot to punch card" maxlength="80" />
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-sm" onclick="closeManualModal()">Cancel</button>
-      <button class="btn btn-sm btn-primary" onclick="submitManualEntry()">Save</button>
+      <button class="btn btn-sm btn-primary" onclick="submitManualEntry()">Save Log</button>
     </div>
   </div>
 </div>

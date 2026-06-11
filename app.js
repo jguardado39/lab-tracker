@@ -295,19 +295,55 @@ function clockOut() {
   saveToday(state); archiveToday(); renderTracker(); renderCal();
 }
 
+/* DYNAMIC FIELD TOGGLING SYSTEM */
+function toggleModalFields() {
+  var type = document.getElementById('m-type').value;
+  var boxIn = document.getElementById('box-in');
+  var boxOut = document.getElementById('box-out');
+  var boxLunch = document.getElementById('box-lunch-dur');
+  var rowTimes = document.getElementById('row-times');
+  var lblIn = document.getElementById('lbl-clock-in');
+
+  // Reset visibilities
+  rowTimes.style.display = "grid";
+  boxIn.style.display = "flex";
+  boxOut.style.display = "flex";
+  boxLunch.style.display = "flex";
+  lblIn.textContent = "Clock In Time";
+
+  if (type === 'in') {
+    boxOut.style.display = "none";
+    boxLunch.style.display = "none";
+  } else if (type === 'out') {
+    boxIn.style.display = "none";
+    boxLunch.style.display = "none";
+  } else if (type === 'lunch') {
+    boxOut.style.display = "none";
+    boxLunch.style.display = "none";
+    lblIn.textContent = "Break Time Timestamp"; // Re-label input for clarity
+  }
+}
+
 function openManualModal() {
   var todayStr = new Date().toISOString().split('T')[0];
+  document.getElementById('m-type').value = "full";
   document.getElementById('m-date').value = todayStr;
   document.getElementById('m-clock-in').value = "09:00";
   document.getElementById('m-clock-out').value = "17:00";
   document.getElementById('m-lunch-dur').value = "0";
   document.getElementById('m-note').value = "";
   document.getElementById('m-tag').value = "General";
+  
+  toggleModalFields();
   document.getElementById('manual-modal').classList.add('active');
 }
-function closeManualModal() { document.getElementById('manual-modal').classList.remove('active'); }
+
+function closeManualModal() {
+  document.getElementById('manual-modal').classList.remove('active');
+}
 
 function submitManualEntry() {
+  var typeVal = document.getElementById('m-type').value;
   var dateVal = document.getElementById('m-date').value;
   var inVal = document.getElementById('m-clock-in').value;
   var outVal = document.getElementById('m-clock-out').value;
@@ -315,27 +351,74 @@ function submitManualEntry() {
   var lunchMin = parseInt(document.getElementById('m-lunch-dur').value) || 0;
   var noteVal = document.getElementById('m-note').value.trim();
 
-  if (!dateVal || !inVal || !outVal) { alert('Fill all required parameters.'); return; }
-
-  var inTs = Date.parse(dateVal + 'T' + inVal);
-  var outTs = Date.parse(dateVal + 'T' + outVal);
-  if (outTs <= inTs) { alert('Clock out must be after clock in.'); return; }
-
-  var lunchMs = lunchMin * 60 * 1000;
-  var mockRecord = {
-    dateKey: dateVal, status: 'done', inTime: inTs,
-    lunchStart: lunchMs > 0 ? inTs + 1000 : null,
-    lunchEnd: lunchMs > 0 ? inTs + 1000 + lunchMs : null,
-    outTime: outTs, tag: tagVal,
-    entries: [{ label: 'Manual entry', ts: inTs, note: noteVal || 'Logged retroactively' }]
-  };
+  if (!dateVal) { alert('Please select a valid date.'); return; }
 
   var h = loadHist();
-  h[dateVal] = mockRecord;
+  // Fetch existing day entry if it exists, or generate a fresh baseline
+  var dayRecord = h[dateVal] || {
+    dateKey: dateVal,
+    status: 'done',
+    inTime: null,
+    lunchStart: null,
+    lunchEnd: null,
+    outTime: null,
+    tag: tagVal,
+    entries: []
+  };
+
+  var baseTsStr = dateVal + 'T';
+
+  // HANDLE SINGLE TIMESTAMPS OR FULL CODES
+  if (typeVal === 'full') {
+    if (!inVal || !outVal) { alert('Please enter both In and Out times.'); return; }
+    var inTs = Date.parse(baseTsStr + inVal);
+    var outTs = Date.parse(baseTsStr + outVal);
+    
+    if (outTs <= inTs) { alert('Clock Out must follow Clock In.'); return; }
+    var lunchMs = lunchMin * 60 * 1000;
+    
+    dayRecord.inTime = inTs;
+    dayRecord.outTime = outTs;
+    if (lunchMs > 0) {
+      dayRecord.lunchStart = inTs + 1000;
+      dayRecord.lunchEnd = inTs + 1000 + lunchMs;
+    }
+    dayRecord.tag = tagVal;
+    dayRecord.entries.push({ label: 'Manual entry', ts: inTs, note: noteVal || 'Full shift entry logged.' });
+
+  } else if (typeVal === 'in') {
+    if (!inVal) { alert('Please enter an arrival time.'); return; }
+    var ts = Date.parse(baseTsStr + inVal);
+    dayRecord.inTime = ts;
+    dayRecord.tag = tagVal;
+    dayRecord.entries.push({ label: 'Clock in', ts: ts, note: noteVal || 'Manual punch override' });
+
+  } else if (typeVal === 'out') {
+    if (!outVal) { alert('Please enter a departure time.'); return; }
+    var ts = Date.parse(baseTsStr + outVal);
+    dayRecord.outTime = ts;
+    dayRecord.entries.push({ label: 'Clock out', ts: ts, note: noteVal || 'Manual punch override' });
+
+  } else if (typeVal === 'lunch') {
+    if (!inVal) { alert('Please enter a timestamp for the break.'); return; }
+    var ts = Date.parse(baseTsStr + inVal);
+    dayRecord.entries.push({ label: 'Lunch start', ts: ts, note: noteVal || 'Manual break marker' });
+  }
+
+  // Save changes to database map
+  h[dateVal] = dayRecord;
   saveHist(h);
 
-  if (dateVal === todayKey()) { state = mockRecord; saveToday(state); }
-  closeManualModal(); selectedDay = dateVal; renderTracker(); renderCal();
+  // Sync if mutating today's active session state variables
+  if (dateVal === todayKey()) {
+    state = dayRecord;
+    saveToday(state);
+  }
+
+  closeManualModal();
+  selectedDay = dateVal;
+  renderTracker();
+  renderCal();
 }
 
 document.getElementById('tag-select').addEventListener('change', function(e) {

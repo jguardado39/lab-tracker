@@ -72,9 +72,9 @@
     .metric-label { font-size: 12px; color: var(--t3); margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
     .metric-val { font-size: 20px; font-weight: 500; color: var(--t1); font-variant-numeric: tabular-nums; }
 
-    /* note input */
+    /* note input & general inputs */
     .note-row { margin-bottom: 1.25rem; }
-    .note-row input {
+    input[type="text"], input[type="date"], input[type="time"], input[type="number"] {
       width: 100%; padding: 9px 13px;
       border-radius: var(--r-md);
       border: 0.5px solid var(--border-mid);
@@ -83,8 +83,8 @@
       font-size: 14px; font-family: var(--font);
       outline: none;
     }
-    .note-row input::placeholder { color: var(--t3); }
-    .note-row input:focus { border-color: var(--border-info); }
+    input::placeholder { color: var(--t3); }
+    input:focus { border-color: var(--border-info); }
 
     /* buttons */
     .actions { display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
@@ -101,6 +101,11 @@
     .btn:hover:not(:disabled) { background: var(--bg3); }
     .btn:active:not(:disabled) { transform: scale(0.98); }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    
+    /* Specific overrides for secondary buttons */
+    .btn-sm { padding: 6px 12px; font-size: 13px; flex: none; min-width: auto; }
+    .btn-primary { background: var(--bg-info) !important; border-color: var(--border-info) !important; color: var(--t-info) !important; }
+    .btn-primary:hover:not(:disabled) { background: #103d63 !important; }
 
     /* log */
     .log-section { border: 0.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden; background: var(--bg1); }
@@ -119,15 +124,17 @@
 
     /* calendar */
     .month-metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 1.5rem; }
-    .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: 8px; }
+    .cal-nav-arrows { display: flex; gap: 6px; }
     .cal-nav button { padding: 6px 14px; border-radius: var(--r-md); border: 0.5px solid var(--border-mid); background: var(--bg2); color: var(--t1); font-size: 14px; cursor: pointer; font-family: var(--font); }
     .cal-nav button:hover { background: var(--bg3); }
-    .cal-title { font-size: 16px; font-weight: 500; color: var(--t1); }
+    .cal-title { font-size: 16px; font-weight: 500; color: var(--t1); flex-grow: 1; text-align: center; }
     .cal-dow { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 2px; margin-bottom: 4px; }
     .cal-dow-cell { text-align: center; font-size: 11px; font-weight: 500; color: var(--t3); padding: 4px 0; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 2px; margin-bottom: 1.25rem; }
-    .cal-cell { min-height: 72px; border-radius: var(--r-md); border: 0.5px solid var(--border); padding: 6px 8px; background: var(--bg1); }
-    .cal-cell.other-month { background: transparent; border-color: transparent; }
+    
+    .cal-cell { min-height: 72px; border-radius: var(--r-md); border: 0.5px solid var(--border); padding: 6px 8px; background: var(--bg1); color: inherit; text-decoration: none; text-align: left; cursor: default; }
+    .cal-cell.other-month { background: transparent; border-color: transparent; pointer-events: none; }
     .cal-cell.today { border-color: var(--border-info); }
     .cal-cell.has-data { cursor: pointer; }
     .cal-cell.has-data:hover { background: var(--bg2); }
@@ -140,6 +147,17 @@
     .detail-panel { border: 0.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden; background: var(--bg1); }
     .detail-header { padding: 10px 16px; background: var(--bg2); border-bottom: 0.5px solid var(--border); font-size: 13px; font-weight: 500; color: var(--t2); }
     .detail-empty { padding: 1.5rem; text-align: center; font-size: 14px; color: var(--t3); }
+
+    /* modal overlay */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; padding: 1rem; z-index: 100; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: var(--bg1); border: 0.5px solid var(--border-strong); border-radius: var(--r-lg); width: 100%; max-width: 400px; overflow: hidden; }
+    .modal-header { padding: 14px 16px; background: var(--bg2); border-bottom: 0.5px solid var(--border); font-size: 15px; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .modal-footer { padding: 12px 16px; background: var(--bg2); border-top: 0.5px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 12px; color: var(--t2); font-weight: 500; text-align: left; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     @media (max-width: 480px) {
       .metrics, .month-metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -212,9 +230,12 @@
       <div class="metric"><div class="metric-label">Avg per day</div><div class="metric-val" id="cal-avg">—</div></div>
     </div>
     <div class="cal-nav">
-      <button onclick="calPrev()"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+      <div class="cal-nav-arrows">
+        <button onclick="calPrev()"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+        <button onclick="calNext()"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+      </div>
       <span class="cal-title" id="cal-title"></span>
-      <button onclick="calNext()"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+      <button class="btn btn-sm btn-primary" onclick="openManualModal()"><i class="ti ti-plus" aria-hidden="true"></i> Add entry</button>
     </div>
     <div class="cal-dow">
       <div class="cal-dow-cell">Sun</div><div class="cal-dow-cell">Mon</div><div class="cal-dow-cell">Tue</div>
@@ -228,6 +249,43 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="manual-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span>Add Manual Log</span>
+      <i class="ti ti-x" style="cursor:pointer;color:var(--t3)" onclick="closeManualModal()" aria-label="Close configuration"></i>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="m-date">Date</label>
+        <input type="date" id="m-date" required />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="m-clock-in">Clock In</label>
+          <input type="time" id="m-clock-in" required />
+        </div>
+        <div class="form-group">
+          <label for="m-clock-out">Clock Out</label>
+          <input type="time" id="m-clock-out" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="m-lunch-dur">Lunch Break (Minutes)</label>
+        <input type="number" id="m-lunch-dur" min="0" value="0" />
+      </div>
+      <div class="form-group">
+        <label for="m-note">Note</label>
+        <input type="text" id="m-note" placeholder="e.g. Manual correction, missed tap" maxlength="80" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeManualModal()">Cancel</button>
+      <button class="btn btn-sm btn-primary" onclick="submitManualEntry()">Save entry</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var STORE = 'gt_tracker_v1', HIST = 'gt_cal_v1';
 
@@ -237,7 +295,6 @@ function loadToday() {
     if (stored && stored.dateKey === todayKey()) {
       return stored;
     } else if (stored) {
-      // It's a new day! Archive the previous day's run if it had any data
       if (stored.inTime) {
         var h = loadHist();
         h[stored.dateKey] = stored;
@@ -345,7 +402,7 @@ function renderTracker() {
   var entries = s.entries || [];
   document.getElementById('log-badge').textContent = entries.length + (entries.length === 1 ? ' entry' : ' entries');
 
-  var iconMap = {'Clock in':'ti-login','Clock out':'ti-logout','Lunch start':'ti-soup','Lunch end':'ti-arrow-back-up'};
+  var iconMap = {'Clock in':'ti-login','Clock out':'ti-logout','Lunch start':'ti-soup','Lunch end':'ti-arrow-back-up','Manual entry':'ti-file-pencil'};
   var logBody = document.getElementById('log-body');
   if (entries.length === 0) {
     logBody.innerHTML = '<div class="log-empty">No entries yet — clock in to start tracking.</div>';
@@ -400,15 +457,15 @@ function renderCal() {
     if (k === todK) cls += ' today';
     if (hasData) cls += ' has-data';
     if (k === selectedDay) cls += ' selected';
-    var click = hasData ? ' onclick="selectDay(\'' + k + '\')"' : '';
-    html += '<div class="' + cls + '"' + click + '>';
+    var click = ' onclick="selectDay(\'' + k + '\')"';
+    html += '<button class="' + cls + '"' + click + '>';
     html += '<div class="cal-day-num">' + d + '</div>';
     if (hasData) {
       html += '<div class="cal-hours">' + dur(wms) + '</div>';
       html += '<div class="cal-bar" style="width:' + barW + '%"></div>';
       html += '<div class="cal-in-out">' + fmt(rec.inTime) + ' – ' + fmt(rec.outTime) + '</div>';
     }
-    html += '</div>';
+    html += '</button>';
   }
 
   var tail = (7 - ((startDow + lastDay) % 7)) % 7;
@@ -430,7 +487,7 @@ function renderDetail(rec) {
   var label = d.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric', year:'numeric'});
   document.getElementById('detail-header').textContent = label + ' · ' + dur(workedMs(rec));
   var entries = rec.entries || [];
-  var iconMap = {'Clock in':'ti-login','Clock out':'ti-logout','Lunch start':'ti-soup','Lunch end':'ti-arrow-back-up'};
+  var iconMap = {'Clock in':'ti-login','Clock out':'ti-logout','Lunch start':'ti-soup','Lunch end':'ti-arrow-back-up','Manual entry':'ti-file-pencil'};
   if (entries.length === 0) {
     document.getElementById('detail-body').innerHTML = '<div class="detail-empty">No log entries for this day.</div>';
   } else {
@@ -475,11 +532,77 @@ function clockOut() {
   saveToday(state); archiveToday(); renderTracker();
 }
 
+/* MODAL CONFIG & LOGIC FOR MANUAL ENTRIES */
+function openManualModal() {
+  var todayStr = new Date().toISOString().split('T')[0];
+  document.getElementById('m-date').value = todayStr;
+  document.getElementById('m-clock-in').value = "09:00";
+  document.getElementById('m-clock-out').value = "17:00";
+  document.getElementById('m-lunch-dur').value = "0";
+  document.getElementById('m-note').value = "";
+  document.getElementById('manual-modal').classList.add('active');
+}
+function closeManualModal() {
+  document.getElementById('manual-modal').classList.remove('active');
+}
+function submitManualEntry() {
+  var dateVal = document.getElementById('m-date').value;
+  var inVal = document.getElementById('m-clock-in').value;
+  var outVal = document.getElementById('m-clock-out').value;
+  var lunchMin = parseInt(document.getElementById('m-lunch-dur').value) || 0;
+  var noteVal = document.getElementById('m-note').value.trim();
+
+  if (!dateVal || !inVal || !outVal) {
+    alert('Please fill out all date and time parameters.');
+    return;
+  }
+
+  var inTs = Date.parse(dateVal + 'T' + inVal);
+  var outTs = Date.parse(dateVal + 'T' + outVal);
+
+  if (outTs <= inTs) {
+    alert('Clock out time must happen after your Clock In time.');
+    return;
+  }
+
+  var lunchMs = lunchMin * 60 * 1000;
+  if ((outTs - inTs) <= lunchMs) {
+    alert('Lunch duration cannot be longer than total hours logged.');
+    return;
+  }
+
+  var targetKey = dateVal; 
+  var mockRecord = {
+    dateKey: targetKey,
+    status: 'done',
+    inTime: inTs,
+    lunchStart: lunchMs > 0 ? inTs + 1000 : null,
+    lunchEnd: lunchMs > 0 ? inTs + 1000 + lunchMs : null,
+    outTime: outTs,
+    entries: [
+      { label: 'Manual entry', ts: inTs, note: noteVal || 'Logged retroactively' }
+    ]
+  };
+
+  var h = loadHist();
+  h[targetKey] = mockRecord;
+  saveHist(h);
+
+  if (targetKey === todayKey()) {
+    state = mockRecord;
+    saveToday(state);
+    renderTracker();
+  }
+
+  closeManualModal();
+  selectedDay = targetKey;
+  renderCal();
+}
+
 setInterval(function() {
   var d = new Date();
   document.getElementById('live-clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
   
-  // Real-time rollover check: If the day turns over while the page is left running active
   if (state.dateKey !== todayKey()) {
     state = loadToday();
     renderTracker();

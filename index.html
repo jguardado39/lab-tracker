@@ -1,74 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab Time Tracker</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<style>
-* { box-sizing: border-box; }
-body { margin: 0; }
-.wrap { padding: 1.5rem 0; font-family: var(--font-sans); }
-.tab-row { display: flex; gap: 0; margin-bottom: 1.5rem; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); overflow: hidden; width: fit-content; }
-.tab { padding: 7px 18px; font-size: 13px; font-weight: 500; cursor: pointer; background: transparent; border: none; color: var(--color-text-secondary); transition: background 0.12s, color 0.12s; }
-.tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); }
-.tab:not(:last-child) { border-right: 0.5px solid var(--color-border-secondary); }
-.view { display: none; }
-.view.active { display: block; }
+    :root {
+      --bg0: #0f0f0e;
+      --bg1: #1a1a18;
+      --bg2: #242422;
+      --bg3: #2e2e2b;
+      --t1: #f0ede8;
+      --t2: #b4b2a9;
+      --t3: #888780;
+      --t-info: #85b7eb;
+      --bg-info: #0c2d4a;
+      --border: rgba(255,255,255,0.10);
+      --border-mid: rgba(255,255,255,0.18);
+      --border-strong: rgba(255,255,255,0.30);
+      --border-info: #378add;
+      --green: #5DCAA5;
+      --amber: #EF9F27;
+      --gray: #888780;
+      --r-md: 8px;
+      --r-lg: 12px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
 
-.status-banner { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-.dot-out { background: #888780; } .dot-in { background: #1D9E75; } .dot-lunch { background: #BA7517; }
-.metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 1.5rem; }
-.metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; }
-.metric-label { font-size: 13px; color: var(--color-text-secondary); margin: 0 0 4px; }
-.metric-val { font-size: 22px; font-weight: 500; color: var(--color-text-primary); margin: 0; font-variant-numeric: tabular-nums; }
-.actions { display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
-.btn { flex: 1; min-width: 110px; padding: 10px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.btn:hover { background: var(--color-background-secondary); }
-.btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.note-row { display: flex; gap: 8px; margin-bottom: 1.5rem; }
-.note-row input { flex: 1; padding: 8px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-size: 14px; }
-.log-section { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
-.log-header { padding: 10px 16px; background: var(--color-background-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; justify-content: space-between; }
-.log-header span { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); }
-.log-empty { padding: 2rem; text-align: center; font-size: 14px; color: var(--color-text-tertiary); }
-.log-entry { padding: 10px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; gap: 12px; font-size: 14px; }
-.log-entry:last-child { border-bottom: none; }
-.log-icon { font-size: 16px; width: 20px; text-align: center; color: var(--color-text-secondary); }
-.log-label { flex: 1; color: var(--color-text-primary); }
-.log-time { color: var(--color-text-secondary); font-variant-numeric: tabular-nums; font-size: 13px; }
-.log-dur { color: var(--color-text-tertiary); font-size: 12px; margin-left: 8px; }
-.week-total { padding: 10px 16px; background: var(--color-background-secondary); border-top: 0.5px solid var(--color-border-tertiary); display: flex; justify-content: space-between; font-size: 13px; color: var(--color-text-secondary); }
+    body {
+      font-family: var(--font);
+      background: var(--bg0);
+      color: var(--t1);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
 
-.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-.cal-nav button { padding: 6px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-primary); font-size: 14px; cursor: pointer; }
-.cal-nav button:hover { background: var(--color-background-secondary); }
-.cal-title { font-size: 16px; font-weight: 500; color: var(--color-text-primary); }
-.cal-dow { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 2px; margin-bottom: 4px; }
-.cal-dow-cell { text-align: center; font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); padding: 4px 0; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 2px; }
-.cal-cell { min-height: 70px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); padding: 6px 8px; background: var(--color-background-primary); cursor: default; }
-.cal-cell.other-month { background: transparent; border-color: transparent; }
-.cal-cell.today { border-color: var(--color-border-info); }
-.cal-cell.has-data { cursor: pointer; }
-.cal-cell.has-data:hover { background: var(--color-background-secondary); }
-.cal-cell.selected { border-color: var(--color-border-primary); background: var(--color-background-secondary); }
-.cal-day-num { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 4px; }
-.cal-cell.today .cal-day-num { color: var(--color-text-info); }
-.cal-hours { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
-.cal-bar { height: 3px; border-radius: 2px; background: #1D9E75; margin-top: 4px; }
-.cal-in-out { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+    .page { max-width: 680px; margin: 0 auto; }
 
-.month-metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 1.5rem; }
+    h1 {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--t1);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h1 i { color: var(--t3); }
 
-.detail-panel { margin-top: 1.25rem; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
-.detail-header { padding: 10px 16px; background: var(--color-background-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; font-weight: 500; color: var(--color-text-secondary); }
-.detail-empty { padding: 1.5rem; text-align: center; font-size: 14px; color: var(--color-text-tertiary); }
-</style>
+    /* tabs */
+    .tab-row { display: flex; border: 0.5px solid var(--border-mid); border-radius: var(--r-md); overflow: hidden; width: fit-content; margin-bottom: 1.5rem; }
+    .tab { padding: 7px 18px; font-size: 13px; font-weight: 500; cursor: pointer; background: transparent; border: none; color: var(--t2); font-family: var(--font); transition: background 0.12s, color 0.12s; }
+    .tab.active { background: var(--bg2); color: var(--t1); }
+    .tab:not(:last-child) { border-right: 0.5px solid var(--border-mid); }
+    .view { display: none; }
+    .view.active { display: block; }
 
-<div class="wrap">
-  <h2 class="sr-only">Graduate student time tracker with daily clock-in and monthly calendar view</h2>
+    /* status banner */
+    .status-banner { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; flex-shrink: 0; }
+    .dot-out { background: var(--gray); }
+    .dot-in  { background: var(--green); }
+    .dot-lunch { background: var(--amber); }
+
+    /* metrics */
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 1.5rem; }
+    .metric { background: var(--bg2); border-radius: var(--r-md); padding: 0.9rem 1rem; }
+    .metric-label { font-size: 12px; color: var(--t3); margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
+    .metric-val { font-size: 20px; font-weight: 500; color: var(--t1); font-variant-numeric: tabular-nums; }
+
+    /* note input */
+    .note-row { margin-bottom: 1.25rem; }
+    .note-row input {
+      width: 100%; padding: 9px 13px;
+      border-radius: var(--r-md);
+      border: 0.5px solid var(--border-mid);
+      background: var(--bg2);
+      color: var(--t1);
+      font-size: 14px; font-family: var(--font);
+      outline: none;
+    }
+    .note-row input::placeholder { color: var(--t3); }
+    .note-row input:focus { border-color: var(--border-info); }
+
+    /* buttons */
+    .actions { display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .btn {
+      flex: 1; min-width: 110px; padding: 10px 14px;
+      border-radius: var(--r-md);
+      border: 0.5px solid var(--border-mid);
+      background: var(--bg2);
+      color: var(--t1);
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: var(--font); transition: background 0.12s;
+    }
+    .btn:hover:not(:disabled) { background: var(--bg3); }
+    .btn:active:not(:disabled) { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* log */
+    .log-section { border: 0.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden; background: var(--bg1); }
+    .log-header { padding: 10px 16px; background: var(--bg2); border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .log-header-label { font-size: 13px; font-weight: 500; color: var(--t2); display: flex; align-items: center; gap: 6px; }
+    .log-badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--bg-info); color: var(--t-info); }
+    .log-empty { padding: 2rem; text-align: center; font-size: 14px; color: var(--t3); }
+    .log-entry { padding: 10px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 12px; font-size: 14px; }
+    .log-entry:last-child { border-bottom: none; }
+    .log-icon { font-size: 16px; width: 20px; text-align: center; color: var(--t3); }
+    .log-label { flex: 1; color: var(--t1); }
+    .log-time { color: var(--t2); font-variant-numeric: tabular-nums; font-size: 13px; }
+    .log-dur { color: var(--t3); font-size: 12px; margin-left: 6px; }
+    .log-note { color: var(--t3); font-size: 12px; }
+    .day-total { padding: 10px 16px; background: var(--bg2); border-top: 0.5px solid var(--border); display: flex; justify-content: space-between; font-size: 13px; color: var(--t2); }
+
+    /* calendar */
+    .month-metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 1.5rem; }
+    .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .cal-nav button { padding: 6px 14px; border-radius: var(--r-md); border: 0.5px solid var(--border-mid); background: var(--bg2); color: var(--t1); font-size: 14px; cursor: pointer; font-family: var(--font); }
+    .cal-nav button:hover { background: var(--bg3); }
+    .cal-title { font-size: 16px; font-weight: 500; color: var(--t1); }
+    .cal-dow { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 2px; margin-bottom: 4px; }
+    .cal-dow-cell { text-align: center; font-size: 11px; font-weight: 500; color: var(--t3); padding: 4px 0; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 2px; margin-bottom: 1.25rem; }
+    .cal-cell { min-height: 72px; border-radius: var(--r-md); border: 0.5px solid var(--border); padding: 6px 8px; background: var(--bg1); }
+    .cal-cell.other-month { background: transparent; border-color: transparent; }
+    .cal-cell.today { border-color: var(--border-info); }
+    .cal-cell.has-data { cursor: pointer; }
+    .cal-cell.has-data:hover { background: var(--bg2); }
+    .cal-cell.selected { border-color: var(--border-strong); background: var(--bg2); }
+    .cal-day-num { font-size: 12px; font-weight: 500; color: var(--t2); margin-bottom: 4px; }
+    .cal-cell.today .cal-day-num { color: var(--t-info); }
+    .cal-hours { font-size: 13px; font-weight: 500; color: var(--t1); }
+    .cal-bar { height: 3px; border-radius: 2px; background: var(--green); margin-top: 4px; }
+    .cal-in-out { font-size: 11px; color: var(--t3); margin-top: 3px; }
+    .detail-panel { border: 0.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden; background: var(--bg1); }
+    .detail-header { padding: 10px 16px; background: var(--bg2); border-bottom: 0.5px solid var(--border); font-size: 13px; font-weight: 500; color: var(--t2); }
+    .detail-empty { padding: 1.5rem; text-align: center; font-size: 14px; color: var(--t3); }
+
+    @media (max-width: 480px) {
+      .metrics, .month-metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .btn { min-width: 80px; font-size: 13px; padding: 9px 10px; }
+      .cal-cell { min-height: 54px; padding: 4px 5px; }
+      .cal-in-out { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <h1><i class="ti ti-flask" aria-hidden="true"></i> Lab time tracker</h1>
 
   <div class="tab-row">
-    <button class="tab active" onclick="switchTab('tracker')"><i class="ti ti-clock" aria-hidden="true" style="font-size:14px;margin-right:6px;"></i>Today</button>
-    <button class="tab" onclick="switchTab('calendar')"><i class="ti ti-calendar" aria-hidden="true" style="font-size:14px;margin-right:6px;"></i>Calendar</button>
+    <button class="tab active" onclick="switchTab('tracker')"><i class="ti ti-clock" style="font-size:14px;margin-right:5px;" aria-hidden="true"></i>Today</button>
+    <button class="tab" onclick="switchTab('calendar')"><i class="ti ti-calendar" style="font-size:14px;margin-right:5px;" aria-hidden="true"></i>Calendar</button>
   </div>
 
+  <!-- TRACKER VIEW -->
   <div id="view-tracker" class="view active">
     <div class="status-banner">
       <div style="display:flex;align-items:center;">
@@ -77,35 +167,51 @@ body { margin: 0; }
       </div>
       <div style="text-align:right;">
         <div style="font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;" id="live-clock">--:--:--</div>
-        <div style="font-size:12px;color:var(--color-text-secondary);" id="today-date"></div>
+        <div style="font-size:12px;color:#888780;" id="today-date"></div>
       </div>
     </div>
+
     <div class="metrics">
-      <div class="metric"><p class="metric-label"><i class="ti ti-login" aria-hidden="true" style="font-size:14px;margin-right:4px;"></i>Clocked in</p><p class="metric-val" id="m-in">—</p></div>
-      <div class="metric"><p class="metric-label"><i class="ti ti-soup" aria-hidden="true" style="font-size:14px;margin-right:4px;"></i>Lunch</p><p class="metric-val" id="m-lunch">—</p></div>
-      <div class="metric"><p class="metric-label"><i class="ti ti-clock-hour-4" aria-hidden="true" style="font-size:14px;margin-right:4px;"></i>Time worked</p><p class="metric-val" id="m-worked">0h 0m</p></div>
+      <div class="metric">
+        <div class="metric-label"><i class="ti ti-login" aria-hidden="true"></i> Clocked in</div>
+        <div class="metric-val" id="m-in">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label"><i class="ti ti-soup" aria-hidden="true"></i> Lunch</div>
+        <div class="metric-val" id="m-lunch">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label"><i class="ti ti-clock-hour-4" aria-hidden="true"></i> Time worked</div>
+        <div class="metric-val" id="m-worked">0h 0m</div>
+      </div>
     </div>
-    <div class="note-row"><input type="text" id="note-input" placeholder="Optional note (e.g. lab meeting, rotation task...)" maxlength="80" /></div>
+
+    <div class="note-row">
+      <input type="text" id="note-input" placeholder="Optional note (e.g. lab meeting, cryo session...)" maxlength="80" />
+    </div>
+
     <div class="actions">
       <button class="btn" id="btn-in" onclick="clockIn()"><i class="ti ti-login" aria-hidden="true"></i> Clock in</button>
-      <button class="btn" id="btn-lunch" onclick="toggleLunch()" disabled><i class="ti ti-soup" aria-hidden="true"></i> Start lunch</button>
+      <button class="btn" id="btn-lunch" onclick="toggleLunch()" disabled><i class="ti ti-soup" aria-hidden="true"></i> <span id="lunch-label">Start lunch</span></button>
       <button class="btn" id="btn-out" onclick="clockOut()" disabled><i class="ti ti-logout" aria-hidden="true"></i> Clock out</button>
     </div>
+
     <div class="log-section">
       <div class="log-header">
-        <span><i class="ti ti-history" aria-hidden="true" style="margin-right:6px;"></i>Today's log</span>
-        <span id="log-badge" style="font-size:11px;padding:2px 8px;border-radius:99px;background:var(--color-background-info);color:var(--color-text-info);">0 entries</span>
+        <span class="log-header-label"><i class="ti ti-history" aria-hidden="true"></i> Today's log</span>
+        <span class="log-badge" id="log-badge">0 entries</span>
       </div>
       <div id="log-body"><div class="log-empty">No entries yet — clock in to start tracking.</div></div>
-      <div class="week-total" id="week-total" style="display:none;"><span>Total today</span><span id="total-today-disp">0h 0m</span></div>
+      <div class="day-total" id="day-total" style="display:none;"><span>Total today</span><span id="total-disp">0h 0m</span></div>
     </div>
   </div>
 
+  <!-- CALENDAR VIEW -->
   <div id="view-calendar" class="view">
     <div class="month-metrics">
-      <div class="metric"><p class="metric-label">Days worked</p><p class="metric-val" id="cal-days">0</p></div>
-      <div class="metric"><p class="metric-label">Total hours</p><p class="metric-val" id="cal-total">0h 0m</p></div>
-      <div class="metric"><p class="metric-label">Avg per day</p><p class="metric-val" id="cal-avg">—</p></div>
+      <div class="metric"><div class="metric-label">Days worked</div><div class="metric-val" id="cal-days">0</div></div>
+      <div class="metric"><div class="metric-label">Total hours</div><div class="metric-val" id="cal-total">0h 0m</div></div>
+      <div class="metric"><div class="metric-label">Avg per day</div><div class="metric-val" id="cal-avg">—</div></div>
     </div>
     <div class="cal-nav">
       <button onclick="calPrev()"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
@@ -117,7 +223,7 @@ body { margin: 0; }
       <div class="cal-dow-cell">Wed</div><div class="cal-dow-cell">Thu</div><div class="cal-dow-cell">Fri</div><div class="cal-dow-cell">Sat</div>
     </div>
     <div class="cal-grid" id="cal-grid"></div>
-    <div class="detail-panel" id="detail-panel">
+    <div class="detail-panel">
       <div class="detail-header" id="detail-header">Select a day to see its log</div>
       <div id="detail-body"><div class="detail-empty">Click any day with recorded hours to view its full log.</div></div>
     </div>
@@ -125,42 +231,41 @@ body { margin: 0; }
 </div>
 
 <script>
-const STORE_KEY = 'gt_tracker_v1';
-const CAL_KEY = 'gt_cal_v1';
+var STORE = 'gt_tracker_v1', HIST = 'gt_cal_v1';
 
 function loadToday() {
-  return JSON.parse(localStorage.getItem(STORE_KEY) || 'null') || { entries: [], status: 'out', inTime: null, lunchStart: null, lunchEnd: null };
+  try { return JSON.parse(localStorage.getItem(STORE)) || mkFresh(); } catch(e) { return mkFresh(); }
 }
-function saveToday(s) { localStorage.setItem(STORE_KEY, JSON.stringify(s)); }
+function mkFresh() { return { entries: [], status: 'out', inTime: null, lunchStart: null, lunchEnd: null, outTime: null }; }
+function saveToday(s) { localStorage.setItem(STORE, JSON.stringify(s)); }
+function loadHist() { try { return JSON.parse(localStorage.getItem(HIST)) || {}; } catch(e) { return {}; } }
+function saveHist(h) { localStorage.setItem(HIST, JSON.stringify(h)); }
 
-function loadHistory() { return JSON.parse(localStorage.getItem(CAL_KEY) || '{}'); }
-function saveHistory(h) { localStorage.setItem(CAL_KEY, JSON.stringify(h)); }
-
-function dateKey(ts) {
-  const d = new Date(ts);
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+function todayKey() {
+  var d = new Date();
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
 }
-function todayKey() { return dateKey(Date.now()); }
+function pad(n) { return String(n).padStart(2,'0'); }
 
-let state = loadToday();
-let calYear = new Date().getFullYear();
-let calMonth = new Date().getMonth();
-let selectedDay = null;
+var state = loadToday();
+var calYear = new Date().getFullYear();
+var calMonth = new Date().getMonth();
+var selectedDay = null;
 
 function fmt(ts) {
   if (!ts) return '—';
   return new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 }
 function dur(ms) {
-  if (ms <= 0) return '0m';
-  const m = Math.round(ms / 60000);
-  const h = Math.floor(m / 60), rm = m % 60;
-  return h > 0 ? h + 'h ' + rm + 'm' : rm + 'm';
+  if (!ms || ms <= 0) return '0m';
+  var m = Math.round(ms / 60000);
+  var h = Math.floor(m / 60), r = m % 60;
+  return h > 0 ? h + 'h ' + r + 'm' : r + 'm';
 }
 function workedMs(s) {
   if (!s || !s.inTime) return 0;
-  const end = s.outTime || (s === state ? Date.now() : s.inTime);
-  let total = end - s.inTime;
+  var end = s.outTime || (s === state ? Date.now() : s.inTime);
+  var total = end - s.inTime;
   if (s.lunchStart && s.lunchEnd) total -= (s.lunchEnd - s.lunchStart);
   else if (s.lunchStart && !s.lunchEnd && s === state) total -= (Date.now() - s.lunchStart);
   return Math.max(0, total);
@@ -168,112 +273,110 @@ function workedMs(s) {
 
 function archiveToday() {
   if (!state.inTime || !state.outTime) return;
-  const h = loadHistory();
+  var h = loadHist();
   h[todayKey()] = JSON.parse(JSON.stringify(state));
-  saveHistory(h);
+  saveHist(h);
 }
 
 function switchTab(t) {
-  document.querySelectorAll('.tab').forEach((b,i) => b.classList.toggle('active', (i===0&&t==='tracker')||(i===1&&t==='calendar')));
-  document.getElementById('view-tracker').classList.toggle('active', t==='tracker');
-  document.getElementById('view-calendar').classList.toggle('active', t==='calendar');
+  var tabs = document.querySelectorAll('.tab');
+  tabs[0].classList.toggle('active', t === 'tracker');
+  tabs[1].classList.toggle('active', t === 'calendar');
+  document.getElementById('view-tracker').classList.toggle('active', t === 'tracker');
+  document.getElementById('view-calendar').classList.toggle('active', t === 'calendar');
   if (t === 'calendar') renderCal();
 }
 
 function renderTracker() {
-  const s = state;
-  const dot = document.getElementById('status-dot');
-  const lbl = document.getElementById('status-label');
-  const btnIn = document.getElementById('btn-in');
-  const btnLunch = document.getElementById('btn-lunch');
-  const btnOut = document.getElementById('btn-out');
+  var s = state;
+  var dot = document.getElementById('status-dot');
+  var lbl = document.getElementById('status-label');
+  var btnIn = document.getElementById('btn-in');
+  var btnLunch = document.getElementById('btn-lunch');
+  var btnOut = document.getElementById('btn-out');
+  var llbl = document.getElementById('lunch-label');
 
   if (s.status === 'out' && !s.inTime) {
-    dot.className='status-dot dot-out'; lbl.textContent='Not clocked in';
-    btnIn.disabled=false; btnLunch.disabled=true; btnOut.disabled=true;
-    btnLunch.innerHTML='<i class="ti ti-soup" aria-hidden="true"></i> Start lunch';
+    dot.className = 'status-dot dot-out'; lbl.textContent = 'Not clocked in';
+    btnIn.disabled = false; btnLunch.disabled = true; btnOut.disabled = true;
+    llbl.textContent = 'Start lunch';
   } else if (s.status === 'in') {
-    dot.className='status-dot dot-in'; lbl.textContent='Working';
-    btnIn.disabled=true; btnLunch.disabled=false; btnOut.disabled=false;
-    btnLunch.innerHTML='<i class="ti ti-soup" aria-hidden="true"></i> Start lunch';
+    dot.className = 'status-dot dot-in'; lbl.textContent = 'Working';
+    btnIn.disabled = true; btnLunch.disabled = false; btnOut.disabled = false;
+    llbl.textContent = 'Start lunch';
   } else if (s.status === 'lunch') {
-    dot.className='status-dot dot-lunch'; lbl.textContent='On lunch break';
-    btnIn.disabled=true; btnLunch.disabled=false; btnOut.disabled=true;
-    btnLunch.innerHTML='<i class="ti ti-soup" aria-hidden="true"></i> End lunch';
+    dot.className = 'status-dot dot-lunch'; lbl.textContent = 'On lunch break';
+    btnIn.disabled = true; btnLunch.disabled = false; btnOut.disabled = true;
+    llbl.textContent = 'End lunch';
   } else if (s.status === 'done') {
-    dot.className='status-dot dot-out'; lbl.textContent='Clocked out';
-    btnIn.disabled=true; btnLunch.disabled=true; btnOut.disabled=true;
+    dot.className = 'status-dot dot-out'; lbl.textContent = 'Clocked out';
+    btnIn.disabled = true; btnLunch.disabled = true; btnOut.disabled = true;
   }
 
-  document.getElementById('m-in').textContent = fmt(s.inTime) || '—';
-  const lunchTxt = s.lunchStart ? fmt(s.lunchStart) + (s.lunchEnd ? ' – ' + fmt(s.lunchEnd) : ' →') : '—';
-  document.getElementById('m-lunch').textContent = lunchTxt;
-  const wms = workedMs(s);
-  document.getElementById('m-worked').textContent = wms > 0 ? dur(wms) : '0h 0m';
+  document.getElementById('m-in').textContent = s.inTime ? fmt(s.inTime) : '—';
+  document.getElementById('m-lunch').textContent = s.lunchStart ? (fmt(s.lunchStart) + (s.lunchEnd ? ' – ' + fmt(s.lunchEnd) : ' →')) : '—';
+  document.getElementById('m-worked').textContent = dur(workedMs(s)) || '0h 0m';
 
-  const entries = s.entries || [];
-  document.getElementById('log-badge').textContent = entries.length + ' ' + (entries.length===1?'entry':'entries');
-  const iconMap = {'Clock in':'ti-login','Clock out':'ti-logout','Lunch start':'ti-soup','Lunch end':'ti-arrow-back-up'};
-  const logBody = document.getElementById('log-body');
+  var entries = s.entries || [];
+  document.getElementById('log-badge').textContent = entries.length + (entries.length === 1 ? ' entry' : ' entries');
+
+  var iconMap = {'Clock in':'ti-login','Clock out':'ti-logout','Lunch start':'ti-soup','Lunch end':'ti-arrow-back-up'};
+  var logBody = document.getElementById('log-body');
   if (entries.length === 0) {
     logBody.innerHTML = '<div class="log-empty">No entries yet — clock in to start tracking.</div>';
   } else {
-    logBody.innerHTML = entries.map((e,i) => {
-      const prev = i>0 ? entries[i-1] : null;
-      const elapsed = prev ? ' <span class="log-dur">+' + dur(e.ts - prev.ts) + '</span>' : '';
-      const noteHtml = e.note ? ' <span style="color:var(--color-text-tertiary);font-size:12px;">· ' + e.note + '</span>' : '';
-      const ic = iconMap[e.label] || 'ti-point';
+    logBody.innerHTML = entries.map(function(e, i) {
+      var prev = i > 0 ? entries[i-1] : null;
+      var elapsed = prev ? ' <span class="log-dur">+' + dur(e.ts - prev.ts) + '</span>' : '';
+      var noteHtml = e.note ? ' <span class="log-note">· ' + e.note + '</span>' : '';
+      var ic = iconMap[e.label] || 'ti-point';
       return '<div class="log-entry"><i class="ti ' + ic + ' log-icon" aria-hidden="true"></i><span class="log-label">' + e.label + noteHtml + '</span><span class="log-time">' + fmt(e.ts) + elapsed + '</span></div>';
     }).join('');
   }
 
-  const wkEl = document.getElementById('week-total');
-  if (s.outTime) { wkEl.style.display='flex'; document.getElementById('total-today-disp').textContent = dur(workedMs(s)); }
-  else wkEl.style.display='none';
+  var dtEl = document.getElementById('day-total');
+  if (s.outTime) { dtEl.style.display = 'flex'; document.getElementById('total-disp').textContent = dur(workedMs(s)); }
+  else dtEl.style.display = 'none';
 
   document.getElementById('today-date').textContent = new Date().toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'});
 }
 
 function renderCal() {
-  const h = loadHistory();
+  var h = loadHist();
   if (state.outTime) h[todayKey()] = state;
 
-  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('cal-title').textContent = monthNames[calMonth] + ' ' + calYear;
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-title').textContent = MONTHS[calMonth] + ' ' + calYear;
 
-  const first = new Date(calYear, calMonth, 1);
-  const lastDay = new Date(calYear, calMonth+1, 0).getDate();
-  const startDow = first.getDay();
-  const todK = todayKey();
+  var lastDay = new Date(calYear, calMonth+1, 0).getDate();
+  var startDow = new Date(calYear, calMonth, 1).getDay();
+  var todK = todayKey();
 
-  let days = 0, totalMs = 0;
-  for (let d = 1; d <= lastDay; d++) {
-    const k = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+  var days = 0, totalMs = 0;
+  for (var d = 1; d <= lastDay; d++) {
+    var k = calYear + '-' + pad(calMonth+1) + '-' + pad(d);
     if (h[k] && h[k].inTime) { days++; totalMs += workedMs(h[k]); }
   }
   document.getElementById('cal-days').textContent = days;
-  document.getElementById('cal-total').textContent = dur(totalMs);
+  document.getElementById('cal-total').textContent = dur(totalMs) || '0h 0m';
   document.getElementById('cal-avg').textContent = days > 0 ? dur(Math.round(totalMs / days)) : '—';
 
-  const maxMs = 9 * 3600000;
-  const grid = document.getElementById('cal-grid');
-  let html = '';
+  var maxMs = 9 * 3600000;
+  var html = '';
+  for (var i = 0; i < startDow; i++) html += '<div class="cal-cell other-month"></div>';
 
-  for (let i = 0; i < startDow; i++) html += '<div class="cal-cell other-month"></div>';
-
-  for (let d = 1; d <= lastDay; d++) {
-    const k = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    const rec = h[k];
-    const isToday = k === todK;
-    const isSel = k === selectedDay;
-    const hasData = rec && rec.inTime;
-    const wms = hasData ? workedMs(rec) : 0;
-    const barW = hasData ? Math.min(100, Math.round(wms / maxMs * 100)) : 0;
-    let cls = 'cal-cell';
-    if (isToday) cls += ' today';
+  for (var d = 1; d <= lastDay; d++) {
+    var k = calYear + '-' + pad(calMonth+1) + '-' + pad(d);
+    var rec = h[k];
+    var hasData = rec && rec.inTime;
+    var wms = hasData ? workedMs(rec) : 0;
+    var barW = hasData ? Math.min(100, Math.round(wms / maxMs * 100)) : 0;
+    var cls = 'cal-cell';
+    if (k === todK) cls += ' today';
     if (hasData) cls += ' has-data';
-    if (isSel) cls += ' selected';
-    html += '<div class="' + cls + '" ' + (hasData ? 'onclick="selectDay(\'' + k + '\')"' : '') + '>';
+    if (k === selectedDay) cls += ' selected';
+    var click = hasData ? ' onclick="selectDay(\'' + k + '\')"' : '';
+    html += '<div class="' + cls + '"' + click + '>';
     html += '<div class="cal-day-num">' + d + '</div>';
     if (hasData) {
       html += '<div class="cal-hours">' + dur(wms) + '</div>';
@@ -283,34 +386,34 @@ function renderCal() {
     html += '</div>';
   }
 
-  const remaining = (7 - ((startDow + lastDay) % 7)) % 7;
-  for (let i = 0; i < remaining; i++) html += '<div class="cal-cell other-month"></div>';
-  grid.innerHTML = html;
+  var tail = (7 - ((startDow + lastDay) % 7)) % 7;
+  for (var i = 0; i < tail; i++) html += '<div class="cal-cell other-month"></div>';
+  document.getElementById('cal-grid').innerHTML = html;
 
-  if (selectedDay) renderDetail(h[selectedDay]);
+  if (selectedDay && h[selectedDay]) renderDetail(h[selectedDay]);
 }
 
 function selectDay(k) {
   selectedDay = k;
-  const h = loadHistory();
+  var h = loadHist();
   if (state.outTime) h[todayKey()] = state;
   renderCal();
 }
 
 function renderDetail(rec) {
-  const d = new Date(selectedDay + 'T12:00:00');
-  const label = d.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  var d = new Date(selectedDay + 'T12:00:00');
+  var label = d.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric', year:'numeric'});
   document.getElementById('detail-header').textContent = label + ' · ' + dur(workedMs(rec));
-  const entries = rec.entries || [];
-  const iconMap = {'Clock in':'ti-login','Clock out':'ti-logout','Lunch start':'ti-soup','Lunch end':'ti-arrow-back-up'};
+  var entries = rec.entries || [];
+  var iconMap = {'Clock in':'ti-login','Clock out':'ti-logout','Lunch start':'ti-soup','Lunch end':'ti-arrow-back-up'};
   if (entries.length === 0) {
     document.getElementById('detail-body').innerHTML = '<div class="detail-empty">No log entries for this day.</div>';
   } else {
-    document.getElementById('detail-body').innerHTML = entries.map((e,i) => {
-      const prev = i>0 ? entries[i-1] : null;
-      const elapsed = prev ? ' <span class="log-dur">+' + dur(e.ts - prev.ts) + '</span>' : '';
-      const noteHtml = e.note ? ' <span style="color:var(--color-text-tertiary);font-size:12px;">· ' + e.note + '</span>' : '';
-      const ic = iconMap[e.label] || 'ti-point';
+    document.getElementById('detail-body').innerHTML = entries.map(function(e, i) {
+      var prev = i > 0 ? entries[i-1] : null;
+      var elapsed = prev ? ' <span class="log-dur">+' + dur(e.ts - prev.ts) + '</span>' : '';
+      var noteHtml = e.note ? ' <span class="log-note">· ' + e.note + '</span>' : '';
+      var ic = iconMap[e.label] || 'ti-point';
       return '<div class="log-entry"><i class="ti ' + ic + ' log-icon" aria-hidden="true"></i><span class="log-label">' + e.label + noteHtml + '</span><span class="log-time">' + fmt(e.ts) + elapsed + '</span></div>';
     }).join('');
   }
@@ -318,17 +421,16 @@ function renderDetail(rec) {
 
 function calPrev() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } selectedDay = null; renderCal(); }
 function calNext() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } selectedDay = null; renderCal(); }
-
 function getNote() { return document.getElementById('note-input').value.trim(); }
 
 function clockIn() {
-  const now = Date.now();
+  var now = Date.now();
   state = { entries: [{ label: 'Clock in', ts: now, note: getNote() }], status: 'in', inTime: now, lunchStart: null, lunchEnd: null, outTime: null };
   document.getElementById('note-input').value = '';
   saveToday(state); renderTracker();
 }
 function toggleLunch() {
-  const now = Date.now();
+  var now = Date.now();
   if (state.status === 'in') {
     state.lunchStart = now; state.status = 'lunch';
     state.entries.push({ label: 'Lunch start', ts: now, note: getNote() });
@@ -340,18 +442,16 @@ function toggleLunch() {
   saveToday(state); renderTracker();
 }
 function clockOut() {
-  const now = Date.now();
+  var now = Date.now();
   state.outTime = now; state.status = 'done';
   if (state.lunchStart && !state.lunchEnd) state.lunchEnd = now;
   state.entries.push({ label: 'Clock out', ts: now, note: getNote() });
   document.getElementById('note-input').value = '';
-  saveToday(state);
-  archiveToday();
-  renderTracker();
+  saveToday(state); archiveToday(); renderTracker();
 }
 
-setInterval(() => {
-  const d = new Date();
+setInterval(function() {
+  var d = new Date();
   document.getElementById('live-clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
   if (state.status === 'in' || state.status === 'lunch') {
     document.getElementById('m-worked').textContent = dur(workedMs(state));
@@ -360,3 +460,5 @@ setInterval(() => {
 
 renderTracker();
 </script>
+</body>
+</html>

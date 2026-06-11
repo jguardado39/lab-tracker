@@ -158,7 +158,6 @@
     <button class="tab" onclick="switchTab('calendar')"><i class="ti ti-calendar" style="font-size:14px;margin-right:5px;" aria-hidden="true"></i>Calendar</button>
   </div>
 
-  <!-- TRACKER VIEW -->
   <div id="view-tracker" class="view active">
     <div class="status-banner">
       <div style="display:flex;align-items:center;">
@@ -206,7 +205,6 @@
     </div>
   </div>
 
-  <!-- CALENDAR VIEW -->
   <div id="view-calendar" class="view">
     <div class="month-metrics">
       <div class="metric"><div class="metric-label">Days worked</div><div class="metric-val" id="cal-days">0</div></div>
@@ -234,9 +232,36 @@
 var STORE = 'gt_tracker_v1', HIST = 'gt_cal_v1';
 
 function loadToday() {
-  try { return JSON.parse(localStorage.getItem(STORE)) || mkFresh(); } catch(e) { return mkFresh(); }
+  try {
+    var stored = JSON.parse(localStorage.getItem(STORE));
+    if (stored && stored.dateKey === todayKey()) {
+      return stored;
+    } else if (stored) {
+      // It's a new day! Archive the previous day's run if it had any data
+      if (stored.inTime) {
+        var h = loadHist();
+        h[stored.dateKey] = stored;
+        saveHist(h);
+      }
+    }
+    return mkFresh();
+  } catch(e) {
+    return mkFresh();
+  }
 }
-function mkFresh() { return { entries: [], status: 'out', inTime: null, lunchStart: null, lunchEnd: null, outTime: null }; }
+
+function mkFresh() { 
+  return { 
+    dateKey: todayKey(), 
+    entries: [], 
+    status: 'out', 
+    inTime: null, 
+    lunchStart: null, 
+    lunchEnd: null, 
+    outTime: null 
+  }; 
+}
+
 function saveToday(s) { localStorage.setItem(STORE, JSON.stringify(s)); }
 function loadHist() { try { return JSON.parse(localStorage.getItem(HIST)) || {}; } catch(e) { return {}; } }
 function saveHist(h) { localStorage.setItem(HIST, JSON.stringify(h)); }
@@ -264,17 +289,17 @@ function dur(ms) {
 }
 function workedMs(s) {
   if (!s || !s.inTime) return 0;
-  var end = s.outTime || (s === state ? Date.now() : s.inTime);
+  var end = s.outTime || Date.now();
   var total = end - s.inTime;
   if (s.lunchStart && s.lunchEnd) total -= (s.lunchEnd - s.lunchStart);
-  else if (s.lunchStart && !s.lunchEnd && s === state) total -= (Date.now() - s.lunchStart);
+  else if (s.lunchStart && !s.lunchEnd) total -= (end - s.lunchStart);
   return Math.max(0, total);
 }
 
 function archiveToday() {
   if (!state.inTime || !state.outTime) return;
   var h = loadHist();
-  h[todayKey()] = JSON.parse(JSON.stringify(state));
+  h[state.dateKey] = JSON.parse(JSON.stringify(state));
   saveHist(h);
 }
 
@@ -343,7 +368,7 @@ function renderTracker() {
 
 function renderCal() {
   var h = loadHist();
-  if (state.outTime) h[todayKey()] = state;
+  if (state.outTime) h[state.dateKey] = state;
 
   var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('cal-title').textContent = MONTHS[calMonth] + ' ' + calYear;
@@ -396,7 +421,7 @@ function renderCal() {
 function selectDay(k) {
   selectedDay = k;
   var h = loadHist();
-  if (state.outTime) h[todayKey()] = state;
+  if (state.outTime) h[state.dateKey] = state;
   renderCal();
 }
 
@@ -425,7 +450,7 @@ function getNote() { return document.getElementById('note-input').value.trim(); 
 
 function clockIn() {
   var now = Date.now();
-  state = { entries: [{ label: 'Clock in', ts: now, note: getNote() }], status: 'in', inTime: now, lunchStart: null, lunchEnd: null, outTime: null };
+  state = { dateKey: todayKey(), entries: [{ label: 'Clock in', ts: now, note: getNote() }], status: 'in', inTime: now, lunchStart: null, lunchEnd: null, outTime: null };
   document.getElementById('note-input').value = '';
   saveToday(state); renderTracker();
 }
@@ -453,6 +478,16 @@ function clockOut() {
 setInterval(function() {
   var d = new Date();
   document.getElementById('live-clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  
+  // Real-time rollover check: If the day turns over while the page is left running active
+  if (state.dateKey !== todayKey()) {
+    state = loadToday();
+    renderTracker();
+    if (document.getElementById('view-calendar').classList.contains('active')) {
+      renderCal();
+    }
+  }
+
   if (state.status === 'in' || state.status === 'lunch') {
     document.getElementById('m-worked').textContent = dur(workedMs(state));
   }

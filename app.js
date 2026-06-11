@@ -244,7 +244,13 @@ function selectDay(k) {
 function renderDetail(rec) {
   var d = new Date(selectedDay + 'T12:00:00');
   var label = d.toLocaleDateString([], {month:'short', day:'numeric'});
-  document.getElementById('detail-header').textContent = label + ' Log · ' + dur(workedMs(rec));
+  
+  // Dynamic header template with an in-line trash icon button
+  document.getElementById('detail-header').innerHTML = 
+    '<span>' + label + ' Log · ' + dur(workedMs(rec)) + '</span>' +
+    '<button class="btn btn-sm" style="color:var(--amber); border-color:rgba(239,159,39,0.2); background:transparent; padding:2px 6px; margin-left:auto;" onclick="deleteSelectedDay()">' +
+    '<i class="ti ti-trash" aria-hidden="true"></i> Delete</button>';
+    
   var entries = rec.entries || [];
   if (entries.length === 0) {
     document.getElementById('detail-body').innerHTML = '<div class="empty-text">No entries.</div>';

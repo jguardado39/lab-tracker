@@ -260,5 +260,125 @@ function editDayHours(dateKey) {
   renderCal();
 }
 
+// Global tracking anchor for the editor panel
+var activeEditingKey = null;
+
+// Helper to convert timestamp values into a clean HTML time input string (HH:MM)
+function tsToTimeInput(ts) {
+  if (!ts) return "";
+  var d = new Date(ts);
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+
+// Helper to combine a date string and a time input string into an absolute millisecond timestamp
+function combineDateAndTime(dateStr, timeStr) {
+  if (!timeStr) return null;
+  return Date.parse(dateStr + 'T' + timeStr + ':00');
+}
+
+// 1. Rewrite the editDayHours click-listener to populate the input panel form
+function editDayHours(dateKey) {
+  activeEditingKey = dateKey;
+  var h = loadHist();
+  var rec = h[dateKey] || { inTime: null, outTime: null, lunchStart: null, lunchEnd: null };
+
+  document.getElementById('edit-date-lbl').textContent = dateKey;
+  
+  // Set values cleanly into inputs
+  document.getElementById('edit-in').value = tsToTimeInput(rec.inTime);
+  document.getElementById('edit-out').value = tsToTimeInput(rec.outTime);
+  document.getElementById('edit-l-start').value = tsToTimeInput(rec.lunchStart);
+  document.getElementById('edit-l-end').value = tsToTimeInput(rec.lunchEnd);
+
+  // Smoothly display the panel interface line
+  document.getElementById('precision-editor').style.display = "flex";
+}
+
+function closeEditor() {
+  activeEditingKey = null;
+  document.getElementById('precision-editor').style.display = "none";
+}
+
+// 2. Add the save logic processing operations
+function savePrecisionChanges() {
+  if (!activeEditingKey) return;
+  var h = loadHist();
+
+  var inVal = document.getElementById('edit-in').value;
+  var outVal = document.getElementById('edit-out').value;
+  var lStartVal = document.getElementById('edit-l-start').value;
+  var lEndVal = document.getElementById('edit-l-end').value;
+
+  // Validate that if there is data, at least a Clock In time is present
+  if (!inVal && (outVal || lStartVal || lEndVal)) {
+    alert("You must have at least a Clock In time to log a shift.");
+    return;
+  }
+
+  if (!inVal) {
+    // If all clear fields were sent, treat it as a deletion wipe
+    delete h[activeEditingKey];
+    if (activeEditingKey === todayKey()) state = mkFresh();
+  } else {
+    // Reconstruct the structured history records map 
+    var computedIn = combineDateAndTime(activeEditingKey, inVal);
+    var computedOut = combineDateAndTime(activeEditingKey, outVal);
+    var computedLStart = combineDateAndTime(activeEditingKey, lStartVal);
+    var computedLEnd = combineDateAndTime(activeEditingKey, lEndVal);
+
+    // Validation check: ensure logic chronological flows pass successfully
+    if (computedOut && computedOut <= computedIn) {
+      alert("Clock Out time must be later than Clock In time.");
+      return;
+    }
+    if (computedLStart && computedLStart <= computedIn) {
+      alert("Lunch Start must occur after your standard Clock In timestamp.");
+      return;
+    }
+    if (computedLEnd && computedLStart && computedLEnd <= computedLStart) {
+      alert("Lunch End must follow your Lunch Start arrival markers.");
+      return;
+    }
+
+    h[activeEditingKey] = {
+      dateKey: activeEditingKey,
+      status: computedOut ? 'done' : 'in',
+      inTime: computedIn,
+      lunchStart: computedLStart,
+      lunchEnd: computedLEnd,
+      outTime: computedOut
+    };
+  }
+
+  saveHist(h);
+  // Synchronize state values instantly if altering current daily execution states
+  if (activeEditingKey === todayKey()) {
+    state = h[activeEditingKey] || mkFresh();
+    saveToday(state);
+  }
+
+  closeEditor();
+  renderTracker();
+  renderCal();
+}
+
+// 3. Add direct day-wipe functionality
+function deleteDayDirect() {
+  if (!activeEditingKey) return;
+  if (confirm("Are you sure you want to completely erase all data logs for " + activeEditingKey + "?")) {
+    var h = loadHist();
+    delete h[activeEditingKey];
+    saveHist(h);
+
+    if (activeEditingKey === todayKey()) {
+      state = mkFresh();
+      saveToday(state);
+    }
+    closeEditor();
+    renderTracker();
+    renderCal();
+  }
+}
+
 renderTracker();
 renderCal();

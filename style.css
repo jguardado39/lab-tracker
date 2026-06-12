@@ -129,3 +129,72 @@ h1 i { color: var(--border-info); }
   border-radius: 99px;
   transition: width 0.3s ease;
 }
+
+/* Dashboard container adjustment to fit the new fields */
+.dashboard-container {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  max-width: 960px;
+  height: 410px; /* Slight bump to perfectly balance the layout grid */
+}
+
+/* Precision Punch Editor Elements */
+.precision-editor-panel {
+  background: var(--bg2);
+  border: 0.5px solid var(--border-mid);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: fadeIn 0.15s ease-out;
+}
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--t2);
+}
+.editor-inputs-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.edit-field label {
+  font-size: 10px;
+  color: var(--t3);
+  font-weight: 500;
+}
+.edit-field input {
+  background: var(--bg1);
+  border: 0.5px solid var(--border-mid);
+  border-radius: 4px;
+  color: var(--t1);
+  font-size: 11px;
+  padding: 3px 4px;
+  width: 100%;
+  outline: none;
+  font-family: var(--font);
+}
+.editor-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+}
+.btn-text-only {
+  background: transparent; border: none; color: var(--t3); font-size: 11px; cursor: pointer;
+}
+.btn-text-only:hover { color: var(--t1); }
+.btn-danger-text {
+  background: transparent; border: none; color: #E06C75; font-size: 11px; cursor: pointer; font-weight: 500;
+}
+.btn-danger-text:hover { text-decoration: underline; }

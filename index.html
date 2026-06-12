@@ -60,6 +60,35 @@
       <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
     </div>
     <div class="cal-grid" id="cal-grid"></div>
+
+    <div id="precision-editor" class="precision-editor-panel" style="display: none;">
+      <div class="editor-header">
+        <span><i class="ti ti-edit" aria-hidden="true"></i> Edit Punches: <strong id="edit-date-lbl">YYYY-MM-DD</strong></span>
+        <button class="btn-text-only" onclick="closeEditor()">Cancel</button>
+      </div>
+      <div class="editor-inputs-row">
+        <div class="edit-field">
+          <label>In</label>
+          <input type="time" id="edit-in" />
+        </div>
+        <div class="edit-field">
+          <label>Out</label>
+          <input type="time" id="edit-out" />
+        </div>
+        <div class="edit-field">
+          <label>Lunch Start</label>
+          <input type="time" id="edit-l-start" />
+        </div>
+        <div class="edit-field">
+          <label>Lunch End</label>
+          <input type="time" id="edit-l-end" />
+        </div>
+      </div>
+      <div class="editor-actions">
+        <button class="btn-danger-text" onclick="deleteDayDirect()">Delete Day</button>
+        <button class="btn btn-primary" style="padding: 4px 12px; width: auto; font-size: 11px;" onclick="savePrecisionChanges()">Save Punches</button>
+      </div>
+    </div>
   </div>
 
 </div>

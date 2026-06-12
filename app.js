@@ -423,5 +423,49 @@ function exportHistoryToCSV() {
   document.body.removeChild(downloadLink); // Clean up memory footprints
 }
 
+function generateConsoleBackup() {
+  var h = loadHist();
+  var totalRecords = Object.keys(h).length;
+  
+  if (totalRecords === 0) return;
+
+  // Convert the entire history object into a compressed Base64 string
+  var jsonString = JSON.stringify(h);
+  var backupCode = btoa(unescape(encodeURIComponent(jsonString)));
+
+  console.log("================= LAB TRACKER AUTO-BACKUP =================");
+  console.log("Your data is saved locally. If your browser cache is ever cleared,");
+  console.log("open the console and paste the recovery command below:");
+  console.log("");
+  console.log("importBackup('" + backupCode + "')");
+  console.log("");
+  console.log("===========================================================");
+}
+
+function importBackup(backupCode) {
+  try {
+    // Decode the Base64 string back into a functional JavaScript data object
+    var decrypted = decodeURIComponent(escape(atob(backupCode)));
+    var importedData = JSON.parse(decrypted);
+    
+    if (typeof importedData !== 'object' || importedData === null) {
+      throw new Error("Invalid backup format.");
+    }
+
+    if (confirm("Found " + Object.keys(importedData).length + " historical days in this backup. Overwrite local data?")) {
+      saveHist(importedData);
+      renderCal();
+      alert("Database successfully restored! Your calendar has been rebuilt.");
+    }
+  } catch (e) {
+    alert("Error restoring data: Make sure you copied the entire importBackup('...') command exactly.");
+    console.error(e);
+  }
+}
+
+// Existing initial render triggers
 renderTracker();
 renderCal();
+
+// NEW: Fire the silent console backup on app launch
+generateConsoleBackup();

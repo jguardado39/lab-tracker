@@ -332,16 +332,32 @@ setInterval(function() {
   var d = new Date();
   document.getElementById('live-clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   
+  // 1. Midnight rollover check: reset state if a new day starts
   if (state.dateKey !== todayKey()) {
     state = loadToday();
     renderTracker();
     renderCal();
   }
+  
+  // 2. Dynamic Browser Tab Clock Handler
   if (state.status === 'in' || state.status === 'lunch') {
     renderTracker();
+    
+    // If viewing the current month/year grid, keep calendar cell numbers counting up live
     if (calMonth === new Date().getMonth() && calYear === new Date().getFullYear()) {
       renderCal(); 
     }
+
+    // Calculate active running decimal hours
+    var activeLiveHours = workedMs(state) / 3600000;
+    
+    // Update browser tab string to show active count (e.g., "(3.4h) Lab Tracker")
+    var statusPrefix = state.status === 'lunch' ? '⏸️ LUNCH ' : '';
+    document.title = "(" + statusPrefix + activeLiveHours.toFixed(1) + "h) Lab Tracker";
+    
+  } else {
+    // Standard default tab title when you are completely clocked out
+    document.title = "Lab Time Tracker";
   }
 }, 1000);
 

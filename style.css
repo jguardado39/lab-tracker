@@ -19,59 +19,53 @@ body {
   font-family: var(--font);
   background: var(--bg0);
   color: var(--t1);
-  height: 100vh; /* Exactly fill screen height */
-  width: 100vw;  /* Exactly fill screen width */
+  height: 100vh;
+  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* Prevent scrolling completely */
+  overflow: hidden;
   padding: 16px;
 }
 
-/* MASTER WRAPPER: Matches full screen scale dimensions */
 .dashboard-container {
   display: flex;
   flex-direction: column; 
   gap: 16px;
   width: 100%;
-  height: 100%; /* Spans full body viewport height */
-  max-width: 1400px; /* Optional cap to keep wide screens crisp */
+  height: 100%;
+  max-width: 1400px;
 }
 
-/* TOP HALF: Fills all remaining space above the editor */
 .dashboard-row-panels {
   display: flex;
   gap: 16px;
   width: 100%;
-  flex: 1; /* Automatically expands vertically to fill screen */
-  min-height: 0; /* Important layout fix for nested flex elements */
+  flex: 1;
+  min-height: 0;
 }
 
-/* LEFT CONTROLS CONTAINER */
+/* LEFT CONTROLS CONTAINER (Adjusted spacing for metrics removal) */
 .minimal-container {
   background: var(--bg1);
   border: 0.5px solid var(--border-mid);
   border-radius: 12px;
-  padding: 24px;
+  padding: 32px 24px;
   width: 320px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Spreads components evenly */
+  justify-content: center; /* Centers the content block perfectly vertically */
+  gap: 48px; /* Balanced breathing room between clock and buttons */
 }
 
-.tracker-header { text-align: center; margin-top: 10px; }
+.tracker-header { text-align: center; }
 h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--t2); margin-bottom: 8px; }
 h1 i { color: var(--border-info); }
-#live-clock { font-size: 42px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.date-subtext { font-size: 14px; color: var(--t3); }
+#live-clock { font-size: 46px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+.date-subtext { font-size: 14px; color: var(--t3); margin-top: 4px; }
 
-.metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0; }
-.metric-node { background: var(--bg2); border: 0.5px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px 6px; font-size: 11px; color: var(--t3); text-align: center; display: flex; flex-direction: column; gap: 4px; }
-.metric-node strong { font-size: 14px; font-weight: 600; color: var(--t1); font-variant-numeric: tabular-nums; }
-.metric-node.highlighted strong { color: var(--green); }
-
-.actions-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
-.btn { width: 100%; padding: 14px; border-radius: 8px; border: 0.5px solid var(--border-mid); background: var(--bg2); color: var(--t1); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
+.actions-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.btn { width: 100%; padding: 16px; border-radius: 8px; border: 0.5px solid var(--border-mid); background: var(--bg2); color: var(--t1); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
 .btn:hover:not(:disabled) { background: var(--bg3); }
 .btn:disabled { opacity: 0.2; cursor: not-allowed; }
 .btn-primary { background: var(--bg-info); border-color: var(--border-info); color: var(--t-info); }
@@ -100,17 +94,7 @@ h1 i { color: var(--border-info); }
 .cal-nav-arrows button:hover { background: var(--bg3); }
 
 .cal-dow { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; font-weight: 600; color: var(--t3); padding-bottom: 8px; }
-
-
-/* CALENDAR GRID EXPANSION: Grid blocks auto-calculate height evenly */
-.cal-grid { 
-  display: grid; 
-  grid-template-columns: repeat(7, 1fr); 
-  grid-auto-rows: 1fr; /* Crucial: Forces rows to share remaining height equally */
-  gap: 6px; 
-  flex: 1; 
-  min-height: 0; 
-}
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 1fr; gap: 6px; flex: 1; min-height: 0; }
 .cal-cell { border-radius: 6px; background: var(--bg2); border: 0.5px solid rgba(255,255,255,0.03); padding: 8px; display: flex; flex-direction: column; justify-content: space-between; transition: background 0.1s; }
 .cal-cell:hover { background: var(--bg3); }
 .cal-cell.other-month { opacity: 0; pointer-events: none; }

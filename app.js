@@ -191,6 +191,9 @@ function savePrecisionChanges() {
   var lStartVal = document.getElementById('edit-l-start').value;
   var lEndVal = document.getElementById('edit-l-end').value;
 
+  var editorPanel = document.getElementById('precision-editor');
+
+  // 1. Basic Structure Validations
   if (!inVal && (outVal || lStartVal || lEndVal)) {
     alert("You must have at least a Clock In time to log a shift.");
     return;
@@ -205,6 +208,7 @@ function savePrecisionChanges() {
     var computedLStart = combineDateAndTime(activeEditingKey, lStartVal);
     var computedLEnd = combineDateAndTime(activeEditingKey, lEndVal);
 
+    // 2. Chronological Flow Validations
     if (computedOut && computedOut <= computedIn) {
       alert("Clock Out time must be later than Clock In time.");
       return;
@@ -217,7 +221,43 @@ function savePrecisionChanges() {
       alert("Lunch End must follow your Lunch Start arrival markers.");
       return;
     }
+    if (computedOut && computedLStart && computedOut <= computedLStart) {
+      alert("Clock Out must occur after your Lunch Start.");
+      return;
+    }
+    if (computedOut && computedLEnd && computedOut <= computedLEnd) {
+      alert("Clock Out must occur after your Lunch End.");
+      return;
+    }
 
+    // 3. NEW: Smart Duration Threshold Checks
+    var totalShiftMs = (computedOut || Date.now()) - computedIn;
+    var lunchMs = (computedLStart && computedLEnd) ? (computedLEnd - computedLStart) : 0;
+    var finalWorkedMs = totalShiftMs - lunchMs;
+    var decimalHours = finalWorkedMs / 3600000;
+
+    // Trigger Warning if lunch subtraction is wider than total hours at the bench
+    if (lunchMs > totalShiftMs) {
+      editorPanel.classList.add('validation-flash');
+      setTimeout(function() { editorPanel.classList.remove('validation-flash'); }, 1000);
+      alert("Error: Your lunch break duration is longer than your total shift length.");
+      return;
+    }
+
+    // Trigger Warning if single shift spans past 16 continuous hours (Typical typo protection)
+    if (decimalHours > 16.0) {
+      editorPanel.classList.add('validation-flash');
+      setTimeout(function() { editorPanel.classList.remove('validation-flash'); }, 1000);
+      
+      var confirmExcessive = confirm(
+        "⚠️ High Hours Warning:\n" +
+        "These punches calculate to a " + decimalHours.toFixed(1) + " hour shift.\n\n" +
+        "Are you sure this is correct?"
+      );
+      if (!confirmExcessive) return; // Halt save if user clicks Cancel to correct a typo
+    }
+
+    // Data package is structurally sound, pass to database
     h[activeEditingKey] = {
       dateKey: activeEditingKey,
       status: computedOut ? 'done' : 'in',

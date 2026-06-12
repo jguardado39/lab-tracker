@@ -9,30 +9,48 @@
 </head>
 <body>
 
-<div class="minimal-container">
-  <div class="tracker-header">
-    <h1><i class="ti ti-flask" aria-hidden="true"></i> Lab Tracker</h1>
-    <div id="live-clock">--:--</div>
-    <div id="today-date" class="date-subtext"></div>
+<div class="dashboard-container">
+  
+  <div class="minimal-container">
+    <div class="tracker-header">
+      <h1><i class="ti ti-flask" aria-hidden="true"></i> Lab Tracker</h1>
+      <div id="live-clock">--:--</div>
+      <div id="today-date" class="date-subtext"></div>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric-node">In: <strong id="m-in">—</strong></div>
+      <div class="metric-node">Lunch: <strong id="m-lunch">—</strong></div>
+      <div class="metric-node highlighted">Worked: <strong id="m-worked">0h 0m</strong></div>
+    </div>
+
+    <div class="actions-grid">
+      <button class="btn btn-primary" id="btn-in" onclick="clockIn()">
+        <i class="ti ti-login" aria-hidden="true"></i> Clock In
+      </button>
+      <button class="btn" id="btn-lunch" onclick="toggleLunch()" disabled>
+        <i class="ti ti-soup" aria-hidden="true"></i> <span id="lunch-label">Lunch</span>
+      </button>
+      <button class="btn" id="btn-out" onclick="clockOut()" disabled>
+        <i class="ti ti-logout" aria-hidden="true"></i> Clock Out
+      </button>
+    </div>
   </div>
 
-  <div class="metrics-row">
-    <div class="metric-node">In: <strong id="m-in">—</strong></div>
-    <div class="metric-node">Lunch: <strong id="m-lunch">—</strong></div>
-    <div class="metric-node highlighted">Worked: <strong id="m-worked">0h 0m</strong></div>
+  <div class="calendar-panel">
+    <div class="cal-nav">
+      <span class="cal-title" id="cal-title">Month Year</span>
+      <div class="cal-nav-arrows">
+        <button onclick="calPrev()"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+        <button onclick="calNext()"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+      </div>
+    </div>
+    <div class="cal-dow">
+      <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
   </div>
 
-  <div class="actions-grid">
-    <button class="btn btn-primary" id="btn-in" onclick="clockIn()">
-      <i class="ti ti-login" aria-hidden="true"></i> Clock In
-    </button>
-    <button class="btn" id="btn-lunch" onclick="toggleLunch()" disabled>
-      <i class="ti ti-soup" aria-hidden="true"></i> <span id="lunch-label">Lunch</span>
-    </button>
-    <button class="btn" id="btn-out" onclick="clockOut()" disabled>
-      <i class="ti ti-logout" aria-hidden="true"></i> Clock Out
-    </button>
-  </div>
 </div>
 
 <script src="app.js"></script>

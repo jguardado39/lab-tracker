@@ -35,6 +35,8 @@ var state = loadToday();
 var calYear = new Date().getFullYear();
 var calMonth = new Date().getMonth();
 
+var activeEditingKey = null;
+
 function fmt(ts) {
   if (!ts) return '—';
   return new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -76,9 +78,7 @@ function renderTracker() {
     btnIn.disabled = true; btnLunch.disabled = true; btnOut.disabled = true;
   }
 
-  document.getElementById('m-in').textContent = s.inTime ? fmt(s.inTime) : '—';
-  document.getElementById('m-lunch').textContent = s.lunchStart ? (fmt(s.lunchStart) + (s.lunchEnd ? ' - ' + fmt(s.lunchEnd) : ' →')) : '—';
-  document.getElementById('m-worked').textContent = s.inTime ? (Math.round(workedMs(s) / 60000 / 60 * 10) / 10) + 'h' : '0h';
+  // FIXED: Removed the old reference calls to dead metrics elements (m-in, m-lunch, m-worked)
   document.getElementById('today-date').textContent = new Date().toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
 }
 
@@ -86,11 +86,10 @@ function renderCal() {
   var h = loadHist();
   if (state.inTime) h[state.dateKey] = state; 
 
-  // --- NEW CODE: WEEKLY HOURS TRACKER CALCULATION ---
+  // --- WEEKLY HOURS TRACKER CALCULATION ---
   var now = new Date();
   var currentDayOfWeek = now.getDay(); 
   var startOfWeek = new Date(now);
-  // Roll date back to the most recent Sunday
   startOfWeek.setDate(now.getDate() - currentDayOfWeek);
   
   var weeklyMs = 0;
@@ -109,7 +108,6 @@ function renderCal() {
   
   document.getElementById('weekly-hours-txt').textContent = weeklyHours.toFixed(1) + ' / ' + targetHours.toFixed(1) + ' hrs';
   document.getElementById('weekly-progress-fill').style.width = pct + '%';
-  // --------------------------------------------------
 
   var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('cal-title').textContent = MONTHS[calMonth] + ' ' + calYear;
@@ -142,6 +140,111 @@ function renderCal() {
   var tail = (7 - ((startDow + lastDay) % 7)) % 7;
   for (var i = 0; i < tail; i++) html += '<div class="cal-cell other-month"></div>';
   document.getElementById('cal-grid').innerHTML = html;
+}
+
+function tsToTimeInput(ts) {
+  if (!ts) return "";
+  var d = new Date(ts);
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+
+function combineDateAndTime(dateStr, timeStr) {
+  if (!timeStr) return null;
+  return Date.parse(dateStr + 'T' + timeStr + ':00');
+}
+
+function editDayHours(dateKey) {
+  activeEditingKey = dateKey;
+  var h = loadHist();
+  var rec = h[dateKey] || { inTime: null, outTime: null, lunchStart: null, lunchEnd: null };
+
+  document.getElementById('edit-date-lbl').textContent = dateKey;
+  
+  document.getElementById('edit-in').value = tsToTimeInput(rec.inTime);
+  document.getElementById('edit-out').value = tsToTimeInput(rec.outTime);
+  document.getElementById('edit-l-start').value = tsToTimeInput(rec.lunchStart);
+  document.getElementById('edit-l-end').value = tsToTimeInput(rec.lunchEnd);
+
+  document.getElementById('precision-editor').style.display = "flex";
+}
+
+function closeEditor() {
+  activeEditingKey = null;
+  document.getElementById('precision-editor').style.display = "none";
+}
+
+function savePrecisionChanges() {
+  if (!activeEditingKey) return;
+  var h = loadHist();
+
+  var inVal = document.getElementById('edit-in').value;
+  var outVal = document.getElementById('edit-out').value;
+  var lStartVal = document.getElementById('edit-l-start').value;
+  var lEndVal = document.getElementById('edit-l-end').value;
+
+  if (!inVal && (outVal || lStartVal || lEndVal)) {
+    alert("You must have at least a Clock In time to log a shift.");
+    return;
+  }
+
+  if (!inVal) {
+    delete h[activeEditingKey];
+    if (activeEditingKey === todayKey()) state = mkFresh();
+  } else {
+    var computedIn = combineDateAndTime(activeEditingKey, inVal);
+    var computedOut = combineDateAndTime(activeEditingKey, outVal);
+    var computedLStart = combineDateAndTime(activeEditingKey, lStartVal);
+    var computedLEnd = combineDateAndTime(activeEditingKey, lEndVal);
+
+    if (computedOut && computedOut <= computedIn) {
+      alert("Clock Out time must be later than Clock In time.");
+      return;
+    }
+    if (computedLStart && computedLStart <= computedIn) {
+      alert("Lunch Start must occur after your standard Clock In timestamp.");
+      return;
+    }
+    if (computedLEnd && computedLStart && computedLEnd <= computedLStart) {
+      alert("Lunch End must follow your Lunch Start arrival markers.");
+      return;
+    }
+
+    h[activeEditingKey] = {
+      dateKey: activeEditingKey,
+      status: computedOut ? 'done' : 'in',
+      inTime: computedIn,
+      lunchStart: computedLStart,
+      lunchEnd: computedLEnd,
+      outTime: computedOut
+    };
+  }
+
+  saveHist(h);
+  if (activeEditingKey === todayKey()) {
+    state = h[activeEditingKey] || mkFresh();
+    saveToday(state);
+  }
+
+  closeEditor();
+  renderTracker();
+  renderCal();
+}
+
+function deleteDayDirect() {
+  if (!activeEditingKey) return;
+  if (confirm("Are you sure you want to completely erase all data logs for " + activeEditingKey + "?")) {
+    var h = loadHist();
+    delete h[activeEditingKey];
+    saveHist(h);
+
+    if (activeEditingKey === todayKey()) {
+      state = mkFresh();
+      saveToday(state);
+    }
+    closeEditor();
+    renderTracker();
+    renderCal();
+  }
 }
 
 function clockIn() {
@@ -188,197 +291,10 @@ setInterval(function() {
   if (state.status === 'in' || state.status === 'lunch') {
     renderTracker();
     if (calMonth === new Date().getMonth() && calYear === new Date().getFullYear()) {
-      renderCal(); // Update calendar cells dynamically if counting hours
+      renderCal(); 
     }
   }
 }, 1000);
-
-function editDayHours(dateKey) {
-  var h = loadHist();
-  var existingRecord = h[dateKey];
-  
-  // 1. If no data exists yet, offer to create a new manual entry baseline
-  if (!existingRecord) {
-    var newHours = prompt("No hours logged for " + dateKey + ".\nEnter total hours worked to create a log (e.g., 8 or 4.5):");
-    if (newHours === null || newHours.trim() === "") return; // Cancelled
-    
-    var decimalHours = parseFloat(newHours);
-    if (isNaN(decimalHours) || decimalHours < 0) {
-      alert("Please enter a valid positive number.");
-      return;
-    }
-    
-    // Create mock timestamps matching the requested duration
-    var mockIn = Date.parse(dateKey + 'T09:00:00');
-    var mockOut = mockIn + (decimalHours * 60 * 60 * 1000);
-    
-    h[dateKey] = { dateKey: dateKey, status: 'done', inTime: mockIn, lunchStart: null, lunchEnd: null, outTime: mockOut };
-    
-  } else {
-    // 2. If data already exists, prompt to modify or completely wipe it
-    var currentHours = (workedMs(existingRecord) / 3600000).toFixed(1);
-    var updatedInput = prompt(
-      "Editing data for " + dateKey + ".\n" +
-      "Current calculation: " + currentHours + " hours.\n\n" +
-      "Enter new hours (or type '0' to delete this entire day's log):", 
-      currentHours
-    );
-    
-    if (updatedInput === null) return; // Cancelled
-    var decimalHours = parseFloat(updatedInput);
-    
-    if (isNaN(decimalHours) || decimalHours < 0) {
-      alert("Please enter a valid positive number.");
-      return;
-    }
-    
-    if (decimalHours === 0) {
-      // Complete removal path
-      delete h[dateKey];
-      if (dateKey === todayKey()) state = mkFresh();
-    } else {
-      // Update data mapping properties smoothly
-      var mockIn = Date.parse(dateKey + 'T09:00:00');
-      var mockOut = mockIn + (decimalHours * 60 * 60 * 1000);
-      
-      h[dateKey].inTime = mockIn;
-      h[dateKey].lunchStart = null;
-      h[dateKey].lunchEnd = null;
-      h[dateKey].outTime = mockOut;
-      h[dateKey].status = 'done';
-    }
-  }
-  
-  // Save modifications globally and execute visual re-renders
-  saveHist(h);
-  if (dateKey === todayKey()) {
-    if (h[dateKey]) state = h[dateKey];
-    saveToday(state);
-  }
-  
-  renderTracker();
-  renderCal();
-}
-
-// Global tracking anchor for the editor panel
-var activeEditingKey = null;
-
-// Helper to convert timestamp values into a clean HTML time input string (HH:MM)
-function tsToTimeInput(ts) {
-  if (!ts) return "";
-  var d = new Date(ts);
-  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-}
-
-// Helper to combine a date string and a time input string into an absolute millisecond timestamp
-function combineDateAndTime(dateStr, timeStr) {
-  if (!timeStr) return null;
-  return Date.parse(dateStr + 'T' + timeStr + ':00');
-}
-
-// 1. Rewrite the editDayHours click-listener to populate the input panel form
-function editDayHours(dateKey) {
-  activeEditingKey = dateKey;
-  var h = loadHist();
-  var rec = h[dateKey] || { inTime: null, outTime: null, lunchStart: null, lunchEnd: null };
-
-  document.getElementById('edit-date-lbl').textContent = dateKey;
-  
-  // Set values cleanly into inputs
-  document.getElementById('edit-in').value = tsToTimeInput(rec.inTime);
-  document.getElementById('edit-out').value = tsToTimeInput(rec.outTime);
-  document.getElementById('edit-l-start').value = tsToTimeInput(rec.lunchStart);
-  document.getElementById('edit-l-end').value = tsToTimeInput(rec.lunchEnd);
-
-  // Smoothly display the panel interface line
-  document.getElementById('precision-editor').style.display = "flex";
-}
-
-function closeEditor() {
-  activeEditingKey = null;
-  document.getElementById('precision-editor').style.display = "none";
-}
-
-// 2. Add the save logic processing operations
-function savePrecisionChanges() {
-  if (!activeEditingKey) return;
-  var h = loadHist();
-
-  var inVal = document.getElementById('edit-in').value;
-  var outVal = document.getElementById('edit-out').value;
-  var lStartVal = document.getElementById('edit-l-start').value;
-  var lEndVal = document.getElementById('edit-l-end').value;
-
-  // Validate that if there is data, at least a Clock In time is present
-  if (!inVal && (outVal || lStartVal || lEndVal)) {
-    alert("You must have at least a Clock In time to log a shift.");
-    return;
-  }
-
-  if (!inVal) {
-    // If all clear fields were sent, treat it as a deletion wipe
-    delete h[activeEditingKey];
-    if (activeEditingKey === todayKey()) state = mkFresh();
-  } else {
-    // Reconstruct the structured history records map 
-    var computedIn = combineDateAndTime(activeEditingKey, inVal);
-    var computedOut = combineDateAndTime(activeEditingKey, outVal);
-    var computedLStart = combineDateAndTime(activeEditingKey, lStartVal);
-    var computedLEnd = combineDateAndTime(activeEditingKey, lEndVal);
-
-    // Validation check: ensure logic chronological flows pass successfully
-    if (computedOut && computedOut <= computedIn) {
-      alert("Clock Out time must be later than Clock In time.");
-      return;
-    }
-    if (computedLStart && computedLStart <= computedIn) {
-      alert("Lunch Start must occur after your standard Clock In timestamp.");
-      return;
-    }
-    if (computedLEnd && computedLStart && computedLEnd <= computedLStart) {
-      alert("Lunch End must follow your Lunch Start arrival markers.");
-      return;
-    }
-
-    h[activeEditingKey] = {
-      dateKey: activeEditingKey,
-      status: computedOut ? 'done' : 'in',
-      inTime: computedIn,
-      lunchStart: computedLStart,
-      lunchEnd: computedLEnd,
-      outTime: computedOut
-    };
-  }
-
-  saveHist(h);
-  // Synchronize state values instantly if altering current daily execution states
-  if (activeEditingKey === todayKey()) {
-    state = h[activeEditingKey] || mkFresh();
-    saveToday(state);
-  }
-
-  closeEditor();
-  renderTracker();
-  renderCal();
-}
-
-// 3. Add direct day-wipe functionality
-function deleteDayDirect() {
-  if (!activeEditingKey) return;
-  if (confirm("Are you sure you want to completely erase all data logs for " + activeEditingKey + "?")) {
-    var h = loadHist();
-    delete h[activeEditingKey];
-    saveHist(h);
-
-    if (activeEditingKey === todayKey()) {
-      state = mkFresh();
-      saveToday(state);
-    }
-    closeEditor();
-    renderTracker();
-    renderCal();
-  }
-}
 
 renderTracker();
 renderCal();

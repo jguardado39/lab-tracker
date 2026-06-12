@@ -84,7 +84,7 @@ function renderTracker() {
 
 function renderCal() {
   var h = loadHist();
-  if (state.inTime) h[state.dateKey] = state; // Live reflect today's pending calculations into active grid
+  if (state.inTime) h[state.dateKey] = state; 
 
   var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('cal-title').textContent = MONTHS[calMonth] + ' ' + calYear;
@@ -94,7 +94,6 @@ function renderCal() {
   var todK = todayKey();
 
   var html = '';
-  // Empty bounding buffer blocks for correct day alignment alignment
   for (var i = 0; i < startDow; i++) html += '<div class="cal-cell other-month"></div>';
 
   for (var d = 1; d <= lastDay; d++) {
@@ -104,8 +103,12 @@ function renderCal() {
     
     var cls = 'cal-cell';
     if (k === todK) cls += ' today';
+    if (hasData) cls += ' editable-cell'; // Adds a visual pointer style
     
-    html += '<div class="' + cls + '">';
+    // Clicking a cell calls our new editing system
+    var clickAction = ' onclick="editDayHours(\'' + k + '\')"';
+    
+    html += '<div class="' + cls + '"' + clickAction + ' style="cursor: pointer;">';
     html += '<div class="cal-cell-num">' + d + '</div>';
     if (hasData) {
       html += '<div class="cal-cell-hours">' + dur(workedMs(rec)) + '</div>';
@@ -166,6 +169,73 @@ setInterval(function() {
     }
   }
 }, 1000);
+
+function editDayHours(dateKey) {
+  var h = loadHist();
+  var existingRecord = h[dateKey];
+  
+  // 1. If no data exists yet, offer to create a new manual entry baseline
+  if (!existingRecord) {
+    var newHours = prompt("No hours logged for " + dateKey + ".\nEnter total hours worked to create a log (e.g., 8 or 4.5):");
+    if (newHours === null || newHours.trim() === "") return; // Cancelled
+    
+    var decimalHours = parseFloat(newHours);
+    if (isNaN(decimalHours) || decimalHours < 0) {
+      alert("Please enter a valid positive number.");
+      return;
+    }
+    
+    // Create mock timestamps matching the requested duration
+    var mockIn = Date.parse(dateKey + 'T09:00:00');
+    var mockOut = mockIn + (decimalHours * 60 * 60 * 1000);
+    
+    h[dateKey] = { dateKey: dateKey, status: 'done', inTime: mockIn, lunchStart: null, lunchEnd: null, outTime: mockOut };
+    
+  } else {
+    // 2. If data already exists, prompt to modify or completely wipe it
+    var currentHours = (workedMs(existingRecord) / 3600000).toFixed(1);
+    var updatedInput = prompt(
+      "Editing data for " + dateKey + ".\n" +
+      "Current calculation: " + currentHours + " hours.\n\n" +
+      "Enter new hours (or type '0' to delete this entire day's log):", 
+      currentHours
+    );
+    
+    if (updatedInput === null) return; // Cancelled
+    var decimalHours = parseFloat(updatedInput);
+    
+    if (isNaN(decimalHours) || decimalHours < 0) {
+      alert("Please enter a valid positive number.");
+      return;
+    }
+    
+    if (decimalHours === 0) {
+      // Complete removal path
+      delete h[dateKey];
+      if (dateKey === todayKey()) state = mkFresh();
+    } else {
+      // Update data mapping properties smoothly
+      var mockIn = Date.parse(dateKey + 'T09:00:00');
+      var mockOut = mockIn + (decimalHours * 60 * 60 * 1000);
+      
+      h[dateKey].inTime = mockIn;
+      h[dateKey].lunchStart = null;
+      h[dateKey].lunchEnd = null;
+      h[dateKey].outTime = mockOut;
+      h[dateKey].status = 'done';
+    }
+  }
+  
+  // Save modifications globally and execute visual re-renders
+  saveHist(h);
+  if (dateKey === todayKey()) {
+    if (h[dateKey]) state = h[dateKey];
+    saveToday(state);
+  }
+  
+  renderTracker();
+  renderCal();
+}
 
 renderTracker();
 renderCal();

@@ -86,6 +86,31 @@ function renderCal() {
   var h = loadHist();
   if (state.inTime) h[state.dateKey] = state; 
 
+  // --- NEW CODE: WEEKLY HOURS TRACKER CALCULATION ---
+  var now = new Date();
+  var currentDayOfWeek = now.getDay(); 
+  var startOfWeek = new Date(now);
+  // Roll date back to the most recent Sunday
+  startOfWeek.setDate(now.getDate() - currentDayOfWeek);
+  
+  var weeklyMs = 0;
+  for (var i = 0; i < 7; i++) {
+    var checkDate = new Date(startOfWeek);
+    checkDate.setDate(startOfWeek.getDate() + i);
+    var key = checkDate.getFullYear() + '-' + pad(checkDate.getMonth()+1) + '-' + pad(checkDate.getDate());
+    if (h[key]) {
+      weeklyMs += workedMs(h[key]);
+    }
+  }
+
+  var weeklyHours = weeklyMs / 3600000;
+  var targetHours = 40.0;
+  var pct = Math.min(100, Math.round((weeklyHours / targetHours) * 100));
+  
+  document.getElementById('weekly-hours-txt').textContent = weeklyHours.toFixed(1) + ' / ' + targetHours.toFixed(1) + ' hrs';
+  document.getElementById('weekly-progress-fill').style.width = pct + '%';
+  // --------------------------------------------------
+
   var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('cal-title').textContent = MONTHS[calMonth] + ' ' + calYear;
 
@@ -103,9 +128,7 @@ function renderCal() {
     
     var cls = 'cal-cell';
     if (k === todK) cls += ' today';
-    if (hasData) cls += ' editable-cell'; // Adds a visual pointer style
     
-    // Clicking a cell calls our new editing system
     var clickAction = ' onclick="editDayHours(\'' + k + '\')"';
     
     html += '<div class="' + cls + '"' + clickAction + ' style="cursor: pointer;">';

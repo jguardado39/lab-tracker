@@ -44,9 +44,9 @@ function fmt(ts) {
 
 function dur(ms) {
   if (!ms || ms <= 0) return '';
-  var m = Math.round(ms / 60000);
-  var h = Math.floor(m / 60), r = m % 60;
-  return h > 0 ? h + 'h' : r + 'm'; // Ultra short duration to fit small cells
+  // Convert milliseconds directly into decimal hours rounded to 1 decimal place
+  var hours = ms / 3600000;
+  return hours.toFixed(1) + 'h';
 }
 
 function workedMs(s) {

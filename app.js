@@ -361,5 +361,67 @@ setInterval(function() {
   }
 }, 1000);
 
+function exportHistoryToCSV() {
+  var h = loadHist();
+  
+  // Mix in current running shift records so today's live activity is captured
+  if (state.inTime) {
+    h[state.dateKey] = state;
+  }
+
+  // Extract keys and sort them chronologically
+  var sortedDates = Object.keys(h).sort();
+
+  if (sortedDates.length === 0) {
+    alert("There is no logged history data to export yet.");
+    return;
+  }
+
+  // Build spreadsheet header line column arrays
+  var csvLines = [
+    "Date,Clock In,Lunch Start,Lunch End,Clock Out,Total Hours Worked"
+  ];
+
+  // Helper function to format timestamp into human-readable 24hr time for spreadsheets
+  function formatCsvTime(ts) {
+    if (!ts) return "";
+    var d = new Date(ts);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
+  // Iterate over database rows and populate spreadsheet lines
+  for (var i = 0; i < sortedDates.length; i++) {
+    var dateKey = sortedDates[i];
+    var rec = h[dateKey];
+    
+    var hoursCalculated = (workedMs(rec) / 3600000).toFixed(1);
+
+    var row = [
+      dateKey,
+      formatCsvTime(rec.inTime),
+      formatCsvTime(rec.lunchStart),
+      formatCsvTime(rec.lunchEnd),
+      formatCsvTime(rec.outTime),
+      hoursCalculated
+    ];
+
+    csvLines.push(row.join(","));
+  }
+
+  // Convert raw text arrays into a downloadable browser text data blob
+  var csvString = csvLines.join("\n");
+  var blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  var downloadUrl = URL.createObjectURL(blob);
+
+  // Generate a temporary browser anchor link element to trigger the download saving action
+  var downloadLink = document.createElement("a");
+  downloadLink.setAttribute("href", downloadUrl);
+  downloadLink.setAttribute("download", "lab_timecard_export_" + new Date().getFullYear() + ".csv");
+  document.body.appendChild(downloadLink);
+  
+  downloadLink.click(); // Programmatically execute saving action string
+  document.body.removeChild(downloadLink); // Clean up memory footprints
+}
+
 renderTracker();
 renderCal();

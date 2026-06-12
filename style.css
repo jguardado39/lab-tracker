@@ -142,3 +142,22 @@ h1 i { color: var(--border-info); }
   0%, 100% { background: var(--bg1); }
   50% { background: rgba(229, 192, 123, 0.08); }
 }
+
+/* Micro Export Icon Button Rules */
+.btn-icon-only {
+  background: transparent;
+  border: none;
+  color: var(--t3);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.1s;
+}
+.btn-icon-only:hover {
+  color: var(--green);
+  background: var(--bg2);
+}

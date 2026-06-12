@@ -51,10 +51,19 @@ function dur(ms) {
 
 function workedMs(s) {
   if (!s || !s.inTime) return 0;
-  var end = s.outTime || Date.now();
+  
+  // If the shift is completed, use the exact recorded outTime
+  // Otherwise (if live tracking), default to the running clock (Date.now())
+  var end = (s.status === 'done' && s.outTime) ? s.outTime : (s.outTime || Date.now());
   var total = end - s.inTime;
-  if (s.lunchStart && s.lunchEnd) total -= (s.lunchEnd - s.lunchStart);
-  else if (s.lunchStart && !s.lunchEnd) total -= (end - s.lunchStart);
+  
+  // Factor in lunch subtractions dynamically
+  if (s.lunchStart && s.lunchEnd) {
+    total -= (s.lunchEnd - s.lunchStart);
+  } else if (s.lunchStart && !s.lunchEnd) {
+    total -= (end - s.lunchStart);
+  }
+  
   return Math.max(0, total);
 }
 

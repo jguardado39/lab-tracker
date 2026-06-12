@@ -24,26 +24,34 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* Lock viewport scrolling */
+  overflow: hidden; 
   padding: 16px;
 }
 
-/* Master Side-by-Side Flex Layout Container */
+/* Master stacked container layout */
 .dashboard-container {
+  display: flex;
+  flex-direction: column; 
+  gap: 12px;
+  width: 100%;
+  max-width: 960px;
+}
+
+/* Middle core row split */
+.dashboard-row-panels {
   display: flex;
   gap: 16px;
   width: 100%;
-  max-width: 960px;
-  height: 340px; /* Forces layout to remain short and fit standard panels */
+  height: 310px; /* Kept short to maintain clean single-page density */
 }
 
-/* LEFT WIDGET STYLING */
+/* LEFT SIDEBAR CONTROLS */
 .minimal-container {
   background: var(--bg1);
   border: 0.5px solid var(--border-mid);
   border-radius: 12px;
-  padding: 20px;
-  width: 320px;
+  padding: 18px;
+  width: 310px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -66,7 +74,7 @@ h1 i { color: var(--border-info); }
 .btn:disabled { opacity: 0.2; cursor: not-allowed; }
 .btn-primary { background: var(--bg-info); border-color: var(--border-info); color: var(--t-info); }
 
-/* RIGHT PANEL: COMPACT CALENDAR STYLING */
+/* RIGHT PANEL: CALENDAR GRID */
 .calendar-panel {
   flex: 1;
   background: var(--bg1);
@@ -77,124 +85,49 @@ h1 i { color: var(--border-info); }
   flex-direction: column;
 }
 
-.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.cal-title { font-size: 15px; font-weight: 600; color: var(--t1); }
+.weekly-progress-container { background: var(--bg2); border: 0.5px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+.weekly-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--t2); }
+.progress-track { width: 100%; height: 4px; background: var(--bg3); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--border-info), var(--green)); border-radius: 99px; transition: width 0.3s ease; }
+
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.cal-title { font-size: 14px; font-weight: 600; color: var(--t1); }
 .cal-nav-arrows { display: flex; gap: 4px; }
-.cal-nav-arrows button { padding: 4px 8px; border-radius: 4px; border: 0.5px solid var(--border-mid); background: var(--bg2); color: var(--t1); cursor: pointer; font-size: 12px; }
+.cal-nav-arrows button { padding: 3px 6px; border-radius: 4px; border: 0.5px solid var(--border-mid); background: var(--bg2); color: var(--t1); cursor: pointer; font-size: 11px; }
 .cal-nav-arrows button:hover { background: var(--bg3); }
 
 .cal-dow { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; font-weight: 500; color: var(--t3); padding-bottom: 4px; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; flex: 1; }
-
-/* Micro calendar grid cell entries */
 .cal-cell { border-radius: 4px; background: var(--bg2); border: 0.5px solid rgba(255,255,255,0.03); padding: 4px; display: flex; flex-direction: column; justify-content: space-between; }
 .cal-cell.other-month { opacity: 0; pointer-events: none; }
 .cal-cell-num { font-size: 10px; font-weight: 500; color: var(--t3); }
 .cal-cell.today .cal-cell-num { color: var(--border-info); font-weight: 700; }
 .cal-cell-hours { font-size: 11px; font-weight: 600; color: var(--green); text-align: right; }
 
-@media (max-width: 768px) {
-  body { overflow: auto; height: auto; }
-  .dashboard-container { flex-direction: column; height: auto; }
-  .minimal-container { width: 100%; }
-}
-
-/* Weekly Tracking layout rules */
-.weekly-progress-container {
-  background: var(--bg2);
-  border: 0.5px solid rgba(255,255,255,0.05);
-  border-radius: 6px;
-  padding: 8px 12px;
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.weekly-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--t2);
-}
-.progress-track {
-  width: 100%;
-  height: 4px;
-  background: var(--bg3);
-  border-radius: 99px;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--border-info), var(--green));
-  border-radius: 99px;
-  transition: width 0.3s ease;
-}
-
-/* Dashboard container adjustment to fit the new fields */
-.dashboard-container {
-  display: flex;
-  gap: 16px;
-  width: 100%;
-  max-width: 960px;
-  height: 410px; /* Slight bump to perfectly balance the layout grid */
-}
-
-/* Precision Punch Editor Elements */
+/* DYNAMIC ACCORDION PRECISION EDITOR PANEL (BOTTOM SPAN) */
 .precision-editor-panel {
-  background: var(--bg2);
-  border: 0.5px solid var(--border-mid);
-  border-radius: 6px;
-  padding: 8px 12px;
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  animation: fadeIn 0.15s ease-out;
-}
-.editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-  color: var(--t2);
-}
-.editor-inputs-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-}
-.edit-field {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.edit-field label {
-  font-size: 10px;
-  color: var(--t3);
-  font-weight: 500;
-}
-.edit-field input {
   background: var(--bg1);
   border: 0.5px solid var(--border-mid);
-  border-radius: 4px;
-  color: var(--t1);
-  font-size: 11px;
-  padding: 3px 4px;
+  border-radius: 12px;
+  padding: 12px 18px;
   width: 100%;
-  outline: none;
-  font-family: var(--font);
-}
-.editor-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 2px;
+  flex-direction: column;
+  gap: 8px;
+  animation: slideUp 0.15s ease-out;
 }
-.btn-text-only {
-  background: transparent; border: none; color: var(--t3); font-size: 11px; cursor: pointer;
-}
+.editor-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--t2); }
+.editor-inputs-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.edit-field { display: flex; flex-direction: column; gap: 4px; }
+.edit-field label { font-size: 11px; color: var(--t3); font-weight: 500; }
+.edit-field input { background: var(--bg2); border: 0.5px solid var(--border-mid); border-radius: 6px; color: var(--t1); font-size: 13px; padding: 6px 8px; width: 100%; outline: none; font-family: var(--font); }
+.editor-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.btn-text-only { background: transparent; border: none; color: var(--t3); font-size: 12px; cursor: pointer; }
 .btn-text-only:hover { color: var(--t1); }
-.btn-danger-text {
-  background: transparent; border: none; color: #E06C75; font-size: 11px; cursor: pointer; font-weight: 500;
-}
+.btn-danger-text { background: transparent; border: none; color: #E06C75; font-size: 12px; cursor: pointer; font-weight: 500; }
 .btn-danger-text:hover { text-decoration: underline; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

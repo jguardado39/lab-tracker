@@ -11,83 +11,84 @@
 
 <div class="dashboard-container">
   
-  <div class="minimal-container">
-    <div class="tracker-header">
-      <h1><i class="ti ti-flask" aria-hidden="true"></i> Lab Tracker</h1>
-      <div id="live-clock">--:--</div>
-      <div id="today-date" class="date-subtext"></div>
-    </div>
-
-    <div class="metrics-row">
-      <div class="metric-node">In: <strong id="m-in">—</strong></div>
-      <div class="metric-node">Lunch: <strong id="m-lunch">—</strong></div>
-      <div class="metric-node highlighted">Worked: <strong id="m-worked">0h 0m</strong></div>
-    </div>
-
-    <div class="actions-grid">
-      <button class="btn btn-primary" id="btn-in" onclick="clockIn()">
-        <i class="ti ti-login" aria-hidden="true"></i> Clock In
-      </button>
-      <button class="btn" id="btn-lunch" onclick="toggleLunch()" disabled>
-        <i class="ti ti-soup" aria-hidden="true"></i> <span id="lunch-label">Lunch</span>
-      </button>
-      <button class="btn" id="btn-out" onclick="clockOut()" disabled>
-        <i class="ti ti-logout" aria-hidden="true"></i> Clock Out
-      </button>
-    </div>
-  </div>
-
-  <div class="calendar-panel">
+  <div class="dashboard-row-panels">
     
-    <div class="weekly-progress-container">
-      <div class="weekly-meta">
-        <span><i class="ti ti-calendar-stats" aria-hidden="true"></i> Current Week Progress</span>
-        <span id="weekly-hours-txt" style="font-weight: 600; color: var(--green);">0.0 / 40.0 hrs</span>
+    <div class="minimal-container">
+      <div class="tracker-header">
+        <h1><i class="ti ti-flask" aria-hidden="true"></i> Lab Tracker</h1>
+        <div id="live-clock">--:--</div>
+        <div id="today-date" class="date-subtext"></div>
       </div>
-      <div class="progress-track">
-        <div id="weekly-progress-fill" class="progress-fill" style="width: 0%"></div>
+
+      <div class="metrics-row">
+        <div class="metric-node">In: <strong id="m-in">—</strong></div>
+        <div class="metric-node">Lunch: <strong id="m-lunch">—</strong></div>
+        <div class="metric-node highlighted">Worked: <strong id="m-worked">0h 0m</strong></div>
+      </div>
+
+      <div class="actions-grid">
+        <button class="btn btn-primary" id="btn-in" onclick="clockIn()">
+          <i class="ti ti-login" aria-hidden="true"></i> Clock In
+        </button>
+        <button class="btn" id="btn-lunch" onclick="toggleLunch()" disabled>
+          <i class="ti ti-soup" aria-hidden="true"></i> <span id="lunch-label">Lunch</span>
+        </button>
+        <button class="btn" id="btn-out" onclick="clockOut()" disabled>
+          <i class="ti ti-logout" aria-hidden="true"></i> Clock Out
+        </button>
       </div>
     </div>
 
-    <div class="cal-nav">
-      <span class="cal-title" id="cal-title">Month Year</span>
-      <div class="cal-nav-arrows">
-        <button onclick="calPrev()"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
-        <button onclick="calNext()"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+    <div class="calendar-panel">
+      <div class="weekly-progress-container">
+        <div class="weekly-meta">
+          <span><i class="ti ti-calendar-stats" aria-hidden="true"></i> Current Week Progress</span>
+          <span id="weekly-hours-txt" style="font-weight: 600; color: var(--green);">0.0 / 40.0 hrs</span>
+        </div>
+        <div class="progress-track">
+          <div id="weekly-progress-fill" class="progress-fill" style="width: 0%"></div>
+        </div>
       </div>
-    </div>
-    <div class="cal-dow">
-      <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-    </div>
-    <div class="cal-grid" id="cal-grid"></div>
 
-    <div id="precision-editor" class="precision-editor-panel" style="display: none;">
-      <div class="editor-header">
-        <span><i class="ti ti-edit" aria-hidden="true"></i> Edit Punches: <strong id="edit-date-lbl">YYYY-MM-DD</strong></span>
-        <button class="btn-text-only" onclick="closeEditor()">Cancel</button>
-      </div>
-      <div class="editor-inputs-row">
-        <div class="edit-field">
-          <label>In</label>
-          <input type="time" id="edit-in" />
-        </div>
-        <div class="edit-field">
-          <label>Out</label>
-          <input type="time" id="edit-out" />
-        </div>
-        <div class="edit-field">
-          <label>Lunch Start</label>
-          <input type="time" id="edit-l-start" />
-        </div>
-        <div class="edit-field">
-          <label>Lunch End</label>
-          <input type="time" id="edit-l-end" />
+      <div class="cal-nav">
+        <span class="cal-title" id="cal-title">Month Year</span>
+        <div class="cal-nav-arrows">
+          <button onclick="calPrev()"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+          <button onclick="calNext()"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
         </div>
       </div>
-      <div class="editor-actions">
-        <button class="btn-danger-text" onclick="deleteDayDirect()">Delete Day</button>
-        <button class="btn btn-primary" style="padding: 4px 12px; width: auto; font-size: 11px;" onclick="savePrecisionChanges()">Save Punches</button>
+      <div class="cal-dow">
+        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
       </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+  </div> <div id="precision-editor" class="precision-editor-panel" style="display: none;">
+    <div class="editor-header">
+      <span><i class="ti ti-edit" aria-hidden="true"></i> Edit Punches: <strong id="edit-date-lbl">YYYY-MM-DD</strong></span>
+      <button class="btn-text-only" onclick="closeEditor()">Cancel</button>
+    </div>
+    <div class="editor-inputs-row">
+      <div class="edit-field">
+        <label>Clock In</label>
+        <input type="time" id="edit-in" />
+      </div>
+      <div class="edit-field">
+        <label>Lunch Start</label>
+        <input type="time" id="edit-l-start" />
+      </div>
+      <div class="edit-field">
+        <label>Lunch End</label>
+        <input type="time" id="edit-l-end" />
+      </div>
+      <div class="edit-field">
+        <label>Clock Out</label>
+        <input type="time" id="edit-out" />
+      </div>
+    </div>
+    <div class="editor-actions">
+      <button class="btn-danger-text" onclick="deleteDayDirect()">Delete Day</button>
+      <button class="btn btn-primary" style="padding: 6px 16px; width: auto; font-size: 12px;" onclick="savePrecisionChanges()">Save Punches</button>
     </div>
   </div>
 

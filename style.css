@@ -12,7 +12,6 @@
   --border-mid: rgba(255,255,255,0.15);
   --border-info: #378add;
   --green: #5DCAA5;
-  --amber: #EF9F27;
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
 }
 
@@ -25,11 +24,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* Prevent scrolling entirely */
+  overflow: hidden;
   padding: 20px;
 }
 
-/* Compact Widget Frame Container */
 .minimal-container {
   background: var(--bg1);
   border: 0.5px solid var(--border-mid);
@@ -67,7 +65,6 @@ h1 i { color: var(--border-info); }
 }
 .date-subtext { font-size: 13px; color: var(--t3); margin-top: 4px; }
 
-/* Metrics Horizontal Layout Grid */
 .metrics-row { 
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -93,20 +90,6 @@ h1 i { color: var(--border-info); }
 }
 .metric-node.highlighted strong { color: var(--green); }
 
-/* Quick Selection Dropdowns styling */
-.lunch-dropdown {
-  width: 100%; 
-  padding: 8px 12px; 
-  border-radius: 6px; 
-  border: 0.5px solid var(--amber);
-  background: var(--bg2); 
-  color: var(--t1); 
-  font-size: 13px; 
-  outline: none;
-  animation: fadeIn 0.2s ease-out;
-}
-
-/* Stacked Buttons Interface rules */
 .actions-grid { 
   display: flex; 
   flex-direction: column;
@@ -132,8 +115,3 @@ h1 i { color: var(--border-info); }
 .btn:hover:not(:disabled) { background: var(--bg3); }
 .btn:disabled { opacity: 0.2; cursor: not-allowed; }
 .btn-primary { background: var(--bg-info); border-color: var(--border-info); color: var(--t-info); }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}

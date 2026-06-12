@@ -58,20 +58,18 @@ function renderTracker() {
   var btnLunch = document.getElementById('btn-lunch');
   var btnOut = document.getElementById('btn-out');
   var llbl = document.getElementById('lunch-label');
-  var tLunchSelect = document.getElementById('tracker-lunch-dur');
 
   if (s.status === 'out' && !s.inTime) {
     btnIn.disabled = false; btnLunch.disabled = true; btnOut.disabled = true;
-    llbl.textContent = 'Lunch'; tLunchSelect.style.display = "none";
+    llbl.textContent = 'Lunch';
   } else if (s.status === 'in') {
     btnIn.disabled = true; btnLunch.disabled = false; btnOut.disabled = false;
-    llbl.textContent = 'Start Lunch'; tLunchSelect.style.display = "none";
+    llbl.textContent = 'Start Lunch';
   } else if (s.status === 'lunch') {
     btnIn.disabled = true; btnLunch.disabled = false; btnOut.disabled = true;
-    llbl.textContent = 'End Lunch'; tLunchSelect.style.display = "block";
+    llbl.textContent = 'End Lunch';
   } else if (s.status === 'done') {
     btnIn.disabled = true; btnLunch.disabled = true; btnOut.disabled = true;
-    tLunchSelect.style.display = "none";
   }
 
   document.getElementById('m-in').textContent = s.inTime ? fmt(s.inTime) : '—';
@@ -91,9 +89,7 @@ function toggleLunch() {
   if (state.status === 'in') {
     state.lunchStart = now; state.status = 'lunch';
   } else if (state.status === 'lunch') {
-    var chosenMin = parseInt(document.getElementById('tracker-lunch-dur').value) || 30;
-    var computedEnd = state.lunchStart + (chosenMin * 60 * 1000);
-    state.lunchEnd = computedEnd; state.status = 'in';
+    state.lunchEnd = now; state.status = 'in';
   }
   saveToday(state); renderTracker();
 }
@@ -105,7 +101,6 @@ function clockOut() {
   saveToday(state); renderTracker();
 }
 
-// Background engine refresh clock loop
 setInterval(function() {
   var d = new Date();
   document.getElementById('live-clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});

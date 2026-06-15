@@ -11,6 +11,7 @@
   --t-info: #85b7eb;
   --border-mid: rgba(255,255,255,0.15);
   --border-info: #378add;
+  --bg-info: rgba(55, 138, 221, 0.08); /* FIX #1: was undefined, caused Clock In button to have no background */
   --green: #5DCAA5;
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
 }
@@ -19,12 +20,12 @@ body {
   font-family: var(--font);
   background: var(--bg0);
   color: var(--t1);
-  height: 100vh;
+  min-height: 100vh; /* FIX #9: was height:100vh which clipped the editor panel on short screens */
   width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: auto; /* FIX #9: was overflow:hidden — editor panel now scrollable on short viewports */
   padding: 16px;
 }
 
@@ -68,7 +69,7 @@ h1 i { color: var(--border-info); }
 .btn { width: 100%; padding: 16px; border-radius: 8px; border: 0.5px solid var(--border-mid); background: var(--bg2); color: var(--t1); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
 .btn:hover:not(:disabled) { background: var(--bg3); }
 .btn:disabled { opacity: 0.2; cursor: not-allowed; }
-.btn-primary { background: var(--bg-info); border-color: var(--border-info); color: var(--t-info); }
+.btn-primary { background: var(--bg-info); border-color: var(--border-info); color: var(--t-info); } /* FIX #1: --bg-info now resolves correctly */
 
 /* RIGHT PANEL: FULLSCREEN CALENDAR PANEL */
 .calendar-panel {

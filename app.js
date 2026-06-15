@@ -5,8 +5,17 @@ function loadToday() {
   try {
     var stored = JSON.parse(localStorage.getItem(STORE));
     if (stored && stored.dateKey === todayKey()) return stored;
-    // Auto-archive previous shifts if page left open overnight
+    // FIX #4: Auto-archive previous shifts on midnight rollover.
+    // Previously, archived incomplete shifts had no outTime, so workedMs()
+    // would calculate up to Date.now() — making a shift from yesterday look
+    // like it ran until right now. We now cap outTime at midnight of that day.
     if (stored && stored.inTime) {
+      if (!stored.outTime) {
+        // Set outTime to end-of-day (23:59:59) of the shift's date
+        var shiftDate = new Date(stored.dateKey + 'T23:59:59');
+        stored.outTime = shiftDate.getTime();
+        stored.status = 'done';
+      }
       var h = loadHist();
       h[stored.dateKey] = stored;
       saveHist(h);
@@ -87,7 +96,6 @@ function renderTracker() {
     btnIn.disabled = true; btnLunch.disabled = true; btnOut.disabled = true;
   }
 
-  // FIXED: Removed the old reference calls to dead metrics elements (m-in, m-lunch, m-worked)
   document.getElementById('today-date').textContent = new Date().toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
 }
 
@@ -165,7 +173,13 @@ function combineDateAndTime(dateStr, timeStr) {
 function editDayHours(dateKey) {
   activeEditingKey = dateKey;
   var h = loadHist();
-  var rec = h[dateKey] || { inTime: null, outTime: null, lunchStart: null, lunchEnd: null };
+
+  // FIX #3: Previously only read from loadHist(), so clicking today's cell while
+  // clocked in showed blank fields — today's live state lives in STORE, not HIST,
+  // until clock-out. Now we always prefer the live state object for today's key.
+  var rec = (dateKey === todayKey())
+    ? state
+    : (h[dateKey] || { inTime: null, outTime: null, lunchStart: null, lunchEnd: null });
 
   document.getElementById('edit-date-lbl').textContent = dateKey;
   
@@ -230,13 +244,12 @@ function savePrecisionChanges() {
       return;
     }
 
-    // 3. NEW: Smart Duration Threshold Checks
+    // 3. Smart Duration Threshold Checks
     var totalShiftMs = (computedOut || Date.now()) - computedIn;
     var lunchMs = (computedLStart && computedLEnd) ? (computedLEnd - computedLStart) : 0;
     var finalWorkedMs = totalShiftMs - lunchMs;
     var decimalHours = finalWorkedMs / 3600000;
 
-    // Trigger Warning if lunch subtraction is wider than total hours at the bench
     if (lunchMs > totalShiftMs) {
       editorPanel.classList.add('validation-flash');
       setTimeout(function() { editorPanel.classList.remove('validation-flash'); }, 1000);
@@ -244,7 +257,6 @@ function savePrecisionChanges() {
       return;
     }
 
-    // Trigger Warning if single shift spans past 16 continuous hours (Typical typo protection)
     if (decimalHours > 16.0) {
       editorPanel.classList.add('validation-flash');
       setTimeout(function() { editorPanel.classList.remove('validation-flash'); }, 1000);
@@ -254,10 +266,9 @@ function savePrecisionChanges() {
         "These punches calculate to a " + decimalHours.toFixed(1) + " hour shift.\n\n" +
         "Are you sure this is correct?"
       );
-      if (!confirmExcessive) return; // Halt save if user clicks Cancel to correct a typo
+      if (!confirmExcessive) return;
     }
 
-    // Data package is structurally sound, pass to database
     h[activeEditingKey] = {
       dateKey: activeEditingKey,
       status: computedOut ? 'done' : 'in',
@@ -313,9 +324,20 @@ function toggleLunch() {
 }
 
 function clockOut() {
+  // FIX #5: Previously, if the user forgot to end lunch before clocking out,
+  // the entire lunch-to-clock-out window was silently marked as lunch,
+  // which could wipe out hours. Now we warn and ask for confirmation first.
+  if (state.status === 'lunch') {
+    var confirmed = confirm(
+      "You're currently on lunch.\n\nClick OK to end your lunch break and clock out now."
+    );
+    if (!confirmed) return;
+    state.lunchEnd = Date.now();
+    state.status = 'in';
+  }
+
   var now = Date.now();
   state.outTime = now; state.status = 'done';
-  if (state.lunchStart && !state.lunchEnd) state.lunchEnd = now;
   saveToday(state);
   
   var h = loadHist();
@@ -382,7 +404,7 @@ function exportHistoryToCSV() {
     "Date,Clock In,Lunch Start,Lunch End,Clock Out,Total Hours Worked"
   ];
 
-  // Helper function to format timestamp into human-readable 24hr time for spreadsheets
+  // Helper to format timestamp into human-readable 24hr time for spreadsheets
   function formatCsvTime(ts) {
     if (!ts) return "";
     var d = new Date(ts);
@@ -413,14 +435,18 @@ function exportHistoryToCSV() {
   var blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
   var downloadUrl = URL.createObjectURL(blob);
 
-  // Generate a temporary browser anchor link element to trigger the download saving action
+  // Generate a temporary browser anchor link to trigger the download
   var downloadLink = document.createElement("a");
   downloadLink.setAttribute("href", downloadUrl);
   downloadLink.setAttribute("download", "lab_timecard_export_" + new Date().getFullYear() + ".csv");
   document.body.appendChild(downloadLink);
   
-  downloadLink.click(); // Programmatically execute saving action string
-  document.body.removeChild(downloadLink); // Clean up memory footprints
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+
+  // FIX #8: Revoke the object URL to free memory. Previously this was never
+  // called, leaving the blob URL alive for the entire page session.
+  URL.revokeObjectURL(downloadUrl);
 }
 
 function generateConsoleBackup() {
@@ -429,9 +455,12 @@ function generateConsoleBackup() {
   
   if (totalRecords === 0) return;
 
-  // Convert the entire history object into a compressed Base64 string
+  // FIX #7: Replace deprecated escape()/unescape() with a standards-compliant
+  // approach using TextEncoder to handle the full Unicode range safely.
   var jsonString = JSON.stringify(h);
-  var backupCode = btoa(unescape(encodeURIComponent(jsonString)));
+  var bytes = new TextEncoder().encode(jsonString);
+  var binary = String.fromCharCode.apply(null, bytes);
+  var backupCode = btoa(binary);
 
   console.log("================= LAB TRACKER AUTO-BACKUP =================");
   console.log("Your data is saved locally. If your browser cache is ever cleared,");
@@ -444,9 +473,14 @@ function generateConsoleBackup() {
 
 function importBackup(backupCode) {
   try {
-    // Decode the Base64 string back into a functional JavaScript data object
-    var decrypted = decodeURIComponent(escape(atob(backupCode)));
-    var importedData = JSON.parse(decrypted);
+    // FIX #7: Decode using TextDecoder to match the updated generateConsoleBackup encoder.
+    var binary = atob(backupCode);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    var jsonString = new TextDecoder().decode(bytes);
+    var importedData = JSON.parse(jsonString);
     
     if (typeof importedData !== 'object' || importedData === null) {
       throw new Error("Invalid backup format.");
@@ -463,9 +497,9 @@ function importBackup(backupCode) {
   }
 }
 
-// Existing initial render triggers
+// Initial render
 renderTracker();
 renderCal();
 
-// NEW: Fire the silent console backup on app launch
+// Fire the silent console backup on app launch
 generateConsoleBackup();

@@ -87,8 +87,9 @@ function renderTracker() {
     btnIn.disabled = false; btnLunch.disabled = true; btnOut.disabled = true;
     llbl.textContent = 'Lunch';
   } else if (s.status === 'in') {
-    btnIn.disabled = true; btnLunch.disabled = false; btnOut.disabled = false;
-    llbl.textContent = 'Start Lunch';
+    var lunchUsed = !!(s.lunchStart && s.lunchEnd); // lock out once a full cycle is done
+    btnIn.disabled = true; btnLunch.disabled = lunchUsed; btnOut.disabled = false;
+    llbl.textContent = lunchUsed ? 'Lunch Used' : 'Start Lunch';
   } else if (s.status === 'lunch') {
     btnIn.disabled = true; btnLunch.disabled = false; btnOut.disabled = true;
     llbl.textContent = 'End Lunch';

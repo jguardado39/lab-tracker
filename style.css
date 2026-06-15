@@ -102,6 +102,8 @@ h1 i { color: var(--border-info); }
 .cal-cell-num { font-size: 11px; font-weight: 500; color: var(--t3); }
 .cal-cell.today { border-color: var(--border-info); background: rgba(55, 138, 221, 0.03); }
 .cal-cell.today .cal-cell-num { color: var(--border-info); font-weight: 700; }
+.cal-cell.selected { border-color: var(--green); background: rgba(93, 202, 165, 0.06); }
+.cal-cell.selected .cal-cell-num { color: var(--green); font-weight: 700; }
 .cal-cell-hours { font-size: 14px; font-weight: 600; color: var(--green); text-align: right; }
 
 /* FULL-WIDTH FOOTER EDITOR PANEL */

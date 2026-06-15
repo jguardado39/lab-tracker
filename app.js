@@ -143,7 +143,8 @@ function renderCal() {
     
     var cls = 'cal-cell';
     if (k === todK) cls += ' today';
-    
+    if (k === activeEditingKey) cls += ' selected';
+
     var clickAction = ' onclick="editDayHours(\'' + k + '\')"';
     
     html += '<div class="' + cls + '"' + clickAction + ' style="cursor: pointer;">';
@@ -189,6 +190,7 @@ function editDayHours(dateKey) {
   document.getElementById('edit-l-end').value = tsToTimeInput(rec.lunchEnd);
 
   document.getElementById('precision-editor').style.display = "flex";
+  renderCal(); // re-render so the selected highlight appears immediately
 }
 
 function closeEditor() {

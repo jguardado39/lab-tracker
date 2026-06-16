@@ -100,16 +100,15 @@ function renderTracker() {
   document.getElementById('today-date').textContent = new Date().toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
 }
 
-function renderCal() {
+function updateWeeklyProgress() {
   var h = loadHist();
-  if (state.inTime) h[state.dateKey] = state; 
+  if (state.inTime) h[state.dateKey] = state;
 
-  // --- WEEKLY HOURS TRACKER CALCULATION ---
   var now = new Date();
-  var currentDayOfWeek = now.getDay(); 
+  var currentDayOfWeek = now.getDay();
   var startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - currentDayOfWeek);
-  
+
   var weeklyMs = 0;
   for (var i = 0; i < 7; i++) {
     var checkDate = new Date(startOfWeek);
@@ -123,9 +122,16 @@ function renderCal() {
   var weeklyHours = weeklyMs / 3600000;
   var targetHours = 40.0;
   var pct = Math.min(100, Math.round((weeklyHours / targetHours) * 100));
-  
+
   document.getElementById('weekly-hours-txt').textContent = weeklyHours.toFixed(1) + ' / ' + targetHours.toFixed(1) + ' hrs';
   document.getElementById('weekly-progress-fill').style.width = pct + '%';
+}
+
+function renderCal() {
+  var h = loadHist();
+  if (state.inTime) h[state.dateKey] = state; 
+
+  updateWeeklyProgress();
 
   var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('cal-title').textContent = MONTHS[calMonth] + ' ' + calYear;
@@ -148,7 +154,7 @@ function renderCal() {
 
     var clickAction = ' onclick="editDayHours(\'' + k + '\')"';
     
-    html += '<div class="' + cls + '"' + clickAction + ' style="cursor: pointer;">';
+    html += '<div class="' + cls + '"' + clickAction + ' data-key="' + k + '" style="cursor: pointer;">';
     html += '<div class="cal-cell-num">' + d + '</div>';
     if (hasData) {
       html += '<div class="cal-cell-hours">' + dur(workedMs(rec)) + '</div>';
@@ -159,6 +165,33 @@ function renderCal() {
   var tail = (7 - ((startDow + lastDay) % 7)) % 7;
   for (var i = 0; i < tail; i++) html += '<div class="cal-cell other-month"></div>';
   document.getElementById('cal-grid').innerHTML = html;
+}
+
+// PERF FIX: Previously the 1-second tick called the full renderCal(), which
+// rebuilds the entire month's innerHTML just to update one cell's hour count.
+// This now patches only today's cell directly, leaving the rest of the DOM
+// (and the calendar scroll position / selection state) untouched.
+function updateLiveCalCell() {
+  // Only relevant if today's month/year is the one currently being viewed
+  if (calMonth !== new Date().getMonth() || calYear !== new Date().getFullYear()) return;
+
+  var todK = todayKey();
+  var cell = document.querySelector('.cal-cell[data-key="' + todK + '"]');
+  if (!cell) return;
+
+  var liveMs = workedMs(state);
+  var hoursEl = cell.querySelector('.cal-cell-hours');
+
+  if (liveMs > 0) {
+    if (!hoursEl) {
+      hoursEl = document.createElement('div');
+      hoursEl.className = 'cal-cell-hours';
+      cell.appendChild(hoursEl);
+    }
+    hoursEl.textContent = dur(liveMs);
+  } else if (hoursEl) {
+    hoursEl.remove();
+  }
 }
 
 function tsToTimeInput(ts) {
@@ -368,10 +401,10 @@ setInterval(function() {
   if (state.status === 'in' || state.status === 'lunch') {
     renderTracker();
     
-    // If viewing the current month/year grid, keep calendar cell numbers counting up live
-    if (calMonth === new Date().getMonth() && calYear === new Date().getFullYear()) {
-      renderCal(); 
-    }
+    // PERF FIX: previously called renderCal() every second (rebuilding the whole
+    // grid). Now just patches today's cell + the weekly progress bar directly.
+    updateLiveCalCell();
+    updateWeeklyProgress();
 
     // Calculate active running decimal hours
     var activeLiveHours = workedMs(state) / 3600000;

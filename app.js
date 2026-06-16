@@ -485,6 +485,80 @@ function exportHistoryToCSV() {
   URL.revokeObjectURL(downloadUrl);
 }
 
+function exportBackupJSON() {
+  var h = loadHist();
+  if (state.inTime) h[state.dateKey] = state;
+
+  if (Object.keys(h).length === 0) {
+    alert("There is no logged history data to back up yet.");
+    return;
+  }
+
+  var payload = {
+    app: 'lab-tracker',
+    version: 3,
+    exportedAt: new Date().toISOString(),
+    history: h
+  };
+
+  var jsonString = JSON.stringify(payload, null, 2);
+  var blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+  var downloadUrl = URL.createObjectURL(blob);
+
+  var downloadLink = document.createElement("a");
+  downloadLink.setAttribute("href", downloadUrl);
+  downloadLink.setAttribute("download", "lab_tracker_backup_" + todayKey() + ".json");
+  document.body.appendChild(downloadLink);
+
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+  URL.revokeObjectURL(downloadUrl);
+}
+
+function restoreBackupJSON(event) {
+  var file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var parsed = JSON.parse(e.target.result);
+
+      // Accept either the new {app, version, history} wrapper or a bare history object
+      var importedHistory = (parsed && parsed.history && typeof parsed.history === 'object')
+        ? parsed.history
+        : parsed;
+
+      if (typeof importedHistory !== 'object' || importedHistory === null || Array.isArray(importedHistory)) {
+        throw new Error("Invalid backup file format.");
+      }
+
+      var dayCount = Object.keys(importedHistory).length;
+      if (confirm("Found " + dayCount + " historical days in this file. Overwrite local data?")) {
+        saveHist(importedHistory);
+
+        // If today's key is in the restored data, sync it back into live state too
+        var todK = todayKey();
+        if (importedHistory[todK]) {
+          state = importedHistory[todK];
+          saveToday(state);
+        }
+
+        renderTracker();
+        renderCal();
+        alert("Database successfully restored from file! Your calendar has been rebuilt.");
+      }
+    } catch (err) {
+      alert("Error restoring data: the selected file isn't a valid Lab Tracker backup.");
+      console.error(err);
+    } finally {
+      // Reset the input so selecting the same file again still fires onchange
+      event.target.value = "";
+    }
+  };
+  reader.readAsText(file);
+}
+
 function generateConsoleBackup() {
   var h = loadHist();
   var totalRecords = Object.keys(h).length;

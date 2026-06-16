@@ -50,6 +50,13 @@
         <button class="btn-icon-only" onclick="exportHistoryToCSV()" title="Export All Data to CSV">
           <i class="ti ti-download" aria-hidden="true"></i>
         </button>
+        <button class="btn-icon-only" onclick="exportBackupJSON()" title="Download JSON Backup">
+          <i class="ti ti-file-export" aria-hidden="true"></i>
+        </button>
+        <button class="btn-icon-only" onclick="document.getElementById('restore-file-input').click()" title="Restore from JSON Backup">
+          <i class="ti ti-file-import" aria-hidden="true"></i>
+        </button>
+        <input type="file" id="restore-file-input" accept="application/json" style="display: none;" onchange="restoreBackupJSON(event)" />
       </div>
       <div class="cal-nav-arrows">
         <button onclick="calPrev()"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
